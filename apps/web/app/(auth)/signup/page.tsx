@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignupPage() {
-  const { signUp } = useSignUp();
+  const { signUp, isLoaded, setActive } = useSignUp();
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,7 +17,7 @@ export default function SignupPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!signUp) return;
+    if (!isLoaded) return;
     if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres'); return; }
     setLoading(true); setError('');
     try {
@@ -31,11 +31,14 @@ export default function SignupPage() {
 
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (!signUp) return;
+    if (!isLoaded) return;
     setLoading(true); setError('');
     try {
       const result = await signUp.attemptEmailAddressVerification({ code });
-      if (result.status === 'complete') router.push('/onboarding');
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId });
+        router.push('/onboarding');
+      }
     } catch (err: any) {
       setError('Código incorrecto');
     } finally { setLoading(false); }

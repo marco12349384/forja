@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const { signIn } = useSignIn();
+  const { signIn, isLoaded, setActive } = useSignIn();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,12 +14,13 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!signIn) return;
+    if (!isLoaded) return;
     setLoading(true);
     setError('');
     try {
       const result = await signIn.create({ identifier: email, password });
       if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId });
         router.push('/home');
       }
     } catch (err: any) {
@@ -63,7 +64,7 @@ export default function LoginPage() {
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button
             type="submit"
-            disabled={loading || !signIn}
+            disabled={loading || !isLoaded}
             className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors"
           >
             {loading ? 'Entrando...' : 'Entrar'}

@@ -124,15 +124,15 @@ export interface ExerciseCatalog {
 // ── Onboarding ────────────────────────────────────────────────────
 export interface OnboardingData {
   goal: FitnessGoal;
-  fitness_level: FitnessLevel;
-  available_equipment: Equipment[];
-  days_per_week: number;
-  session_duration_min: number;
+  fitnessLevel: FitnessLevel;
+  equipment: Equipment[];
+  daysPerWeek: number;
+  sessionDurationMin: number;
   injuries: string[];
-  weight_kg: number | null;
-  height_cm: number | null;
-  age: number | null;
-  gender: UserProfile['gender'];
+  weightKg?: number | null;
+  heightCm?: number | null;
+  age?: number | null;
+  gender?: UserProfile['gender'];
 }
 
 // ── AI Plan Generation ────────────────────────────────────────────

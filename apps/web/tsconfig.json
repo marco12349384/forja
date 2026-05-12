@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "ESNext",
+    "lib": ["dom", "dom.iterable", "ES2022"],
     "jsx": "preserve",
+    "types": ["node", "react", "react-dom"],
     "plugins": [
       {
         "name": "next"

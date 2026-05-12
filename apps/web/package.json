@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.2",
-    "@clerk/nextjs": "^7.3.3",
+    "@clerk/nextjs": "^6.39.3",
     "@forja/api-client": "*",
     "@forja/types": "*",
     "@forja/ui": "*",
