@@ -1,0 +1,15 @@
+{
+  "name": "@forja/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@forja/types": "*",
+    "@supabase/supabase-js": "^2.43.0",
+    "postgres": "3.4.9"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Forja",
+    "slug": "forja",
+    "scheme": "forja",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#000000",
+    "splash": {
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.forja.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#000000"
+      },
+      "package": "com.forja.app"
+    },
+    "plugins": ["expo-router"]
+  }
+}
