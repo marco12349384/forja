@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignupPage() {
-  const { signUp, isLoaded } = useSignUp();
+  const { signUp } = useSignUp();
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,7 +17,7 @@ export default function SignupPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isLoaded) return;
+    if (!signUp) return;
     if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres'); return; }
     setLoading(true); setError('');
     try {
@@ -31,7 +31,7 @@ export default function SignupPage() {
 
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (!isLoaded) return;
+    if (!signUp) return;
     setLoading(true); setError('');
     try {
       const result = await signUp.attemptEmailAddressVerification({ code });
