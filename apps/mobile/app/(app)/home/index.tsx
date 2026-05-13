@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Link } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import { getActivePlan, getTodayWorkout } from '@forja/api-client';
-import type { WorkoutPlan } from '@forja/types';
+import { useAuth, useUser } from '@clerk/clerk-expo';
+import { apiCall } from '@/lib/api';
 
 const DAYS_ES = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 const WORKOUT_EMOJI: Record<string, string> = {
@@ -11,28 +10,25 @@ const WORKOUT_EMOJI: Record<string, string> = {
 };
 
 export default function HomeScreen() {
-  const [userName, setUserName] = useState('');
-  const [plan, setPlan] = useState<WorkoutPlan | null>(null);
+  const { getToken } = useAuth();
+  const { user } = useUser();
+  const [plan, setPlan] = useState<any>(null);
   const [todayWorkout, setTodayWorkout] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: userData } = await supabase.from('users').select('name').eq('id', user.id).single();
-      if (userData) setUserName(userData.name);
-
-      const activePlan = await getActivePlan(supabase, user.id);
-      setPlan(activePlan);
-
-      if (activePlan) {
-        const dayName = DAYS_ES[new Date().getDay()];
-        const workout = await getTodayWorkout(supabase, activePlan.id, dayName);
-        setTodayWorkout(workout);
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const result = await apiCall('/api/me/today', token);
+        setPlan(result.plan);
+        setTodayWorkout(result.today);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     load();
   }, []);
@@ -46,19 +42,18 @@ export default function HomeScreen() {
   }
 
   const todayName = DAYS_ES[new Date().getDay()];
+  const userName = user?.firstName ?? 'Atleta';
 
   return (
     <ScrollView className="flex-1 bg-black" contentContainerClassName="px-6 pt-14 pb-10 gap-6">
-      {/* Header */}
       <View className="flex-row justify-between items-start">
         <View>
           <Text className="text-zinc-400 text-sm">Bienvenido de vuelta</Text>
-          <Text className="text-2xl font-bold text-white">{userName || 'Atleta'} 👋</Text>
+          <Text className="text-2xl font-bold text-white">{userName} 👋</Text>
         </View>
         <Text className="text-3xl">⚒️</Text>
       </View>
 
-      {/* Plan activo */}
       {plan && (
         <View className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <Text className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Plan activo</Text>
@@ -66,7 +61,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Workout de hoy */}
       <View>
         <Text className="text-lg font-semibold text-white mb-3 capitalize">
           Hoy — {todayName}
@@ -118,29 +112,22 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Quick actions */}
       <View className="flex-row gap-3">
-        <Link href="/(app)/coach" asChild>
-          <TouchableOpacity className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-            <Text className="text-2xl mb-2">💬</Text>
-            <Text className="text-white font-semibold text-sm">Coach</Text>
-            <Text className="text-zinc-400 text-xs">Pregúntame</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/(app)/progress" asChild>
-          <TouchableOpacity className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-            <Text className="text-2xl mb-2">📈</Text>
-            <Text className="text-white font-semibold text-sm">Progreso</Text>
-            <Text className="text-zinc-400 text-xs">Estadísticas</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/(app)/catalog" asChild>
-          <TouchableOpacity className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-            <Text className="text-2xl mb-2">📚</Text>
-            <Text className="text-white font-semibold text-sm">Catálogo</Text>
-            <Text className="text-zinc-400 text-xs">Ejercicios</Text>
-          </TouchableOpacity>
-        </Link>
+        <TouchableOpacity className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <Text className="text-2xl mb-2">💬</Text>
+          <Text className="text-white font-semibold text-sm">Coach</Text>
+          <Text className="text-zinc-400 text-xs">Pregúntame</Text>
+        </TouchableOpacity>
+        <TouchableOpacity className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <Text className="text-2xl mb-2">📈</Text>
+          <Text className="text-white font-semibold text-sm">Progreso</Text>
+          <Text className="text-zinc-400 text-xs">Estadísticas</Text>
+        </TouchableOpacity>
+        <TouchableOpacity className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <Text className="text-2xl mb-2">📚</Text>
+          <Text className="text-white font-semibold text-sm">Catálogo</Text>
+          <Text className="text-zinc-400 text-xs">Ejercicios</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import { saveUserProfile, generatePlan } from '@forja/api-client';
+import { useAuth } from '@clerk/clerk-expo';
+import { apiCall } from '@/lib/api';
 import type { OnboardingData, FitnessGoal, FitnessLevel, Equipment } from '@forja/types';
 
 const GOALS: { value: FitnessGoal; label: string; emoji: string }[] = [
@@ -33,33 +33,35 @@ const DURATION_OPTIONS = [20, 30, 45, 60, 75, 90];
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState<Partial<OnboardingData>>({
-    available_equipment: [],
+    equipment: [],
     injuries: [],
-    days_per_week: 3,
-    session_duration_min: 45,
+    daysPerWeek: 3,
+    sessionDurationMin: 45,
   });
 
   function toggleEquipment(eq: Equipment) {
     setData((prev) => {
-      const current = prev.available_equipment ?? [];
-      if (current.includes(eq)) return { ...prev, available_equipment: current.filter((e) => e !== eq) };
-      return { ...prev, available_equipment: [...current, eq] };
+      const current = prev.equipment ?? [];
+      return current.includes(eq)
+        ? { ...prev, equipment: current.filter((e) => e !== eq) }
+        : { ...prev, equipment: [...current, eq] };
     });
   }
 
   async function handleFinish() {
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No autenticado');
-      const profile = data as OnboardingData;
-      await saveUserProfile(supabase, user.id, profile);
-      await generatePlan(supabase, profile);
+      const token = await getToken();
+      if (!token) throw new Error('No autenticado');
+      await apiCall('/api/generate-plan', token, {
+        method: 'POST',
+        body: JSON.stringify({ profile: data }),
+      });
       router.replace('/(app)/home');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al generar tu plan');
@@ -69,12 +71,11 @@ export default function OnboardingScreen() {
 
   const canContinue =
     (step === 1 && !!data.goal) ||
-    (step === 2 && !!data.fitness_level) ||
+    (step === 2 && !!data.fitnessLevel) ||
     step >= 3;
 
   return (
     <View className="flex-1 bg-black">
-      {/* Progress */}
       <View className="flex-row gap-1 px-6 pt-14 pb-4">
         {[1, 2, 3, 4, 5].map((i) => (
           <View key={i} className={`flex-1 h-1 rounded-full ${i <= step ? 'bg-orange-500' : 'bg-zinc-800'}`} />
@@ -101,8 +102,8 @@ export default function OnboardingScreen() {
             <Text className="text-2xl font-bold text-white">¿Cuál es tu nivel?</Text>
             {LEVELS.map((l) => (
               <TouchableOpacity key={l.value}
-                onPress={() => setData((p) => ({ ...p, fitness_level: l.value }))}
-                className={`p-4 rounded-2xl border ${data.fitness_level === l.value ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900'}`}>
+                onPress={() => setData((p) => ({ ...p, fitnessLevel: l.value }))}
+                className={`p-4 rounded-2xl border ${data.fitnessLevel === l.value ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900'}`}>
                 <Text className="text-white font-semibold">{l.label}</Text>
                 <Text className="text-zinc-400 text-sm">{l.description}</Text>
               </TouchableOpacity>
@@ -116,7 +117,7 @@ export default function OnboardingScreen() {
             <View className="flex-row flex-wrap gap-3">
               {EQUIPMENT_OPTIONS.map((eq) => (
                 <TouchableOpacity key={eq.value} onPress={() => toggleEquipment(eq.value)}
-                  className={`items-center gap-2 p-4 rounded-2xl border w-[47%] ${data.available_equipment?.includes(eq.value) ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900'}`}>
+                  className={`items-center gap-2 p-4 rounded-2xl border w-[47%] ${data.equipment?.includes(eq.value) ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900'}`}>
                   <Text className="text-2xl">{eq.emoji}</Text>
                   <Text className="text-white text-sm font-medium text-center">{eq.label}</Text>
                 </TouchableOpacity>
@@ -129,23 +130,23 @@ export default function OnboardingScreen() {
           <>
             <Text className="text-2xl font-bold text-white">¿Cuánto tiempo tienes?</Text>
             <Text className="text-zinc-400 font-medium">
-              Días por semana: <Text className="text-white font-bold">{data.days_per_week}</Text>
+              Días por semana: <Text className="text-white font-bold">{data.daysPerWeek}</Text>
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {DAYS_OPTIONS.map((d) => (
-                <TouchableOpacity key={d} onPress={() => setData((p) => ({ ...p, days_per_week: d }))}
-                  className={`flex-1 min-w-[30%] py-3 rounded-xl border items-center ${data.days_per_week === d ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800'}`}>
+                <TouchableOpacity key={d} onPress={() => setData((p) => ({ ...p, daysPerWeek: d }))}
+                  className={`flex-1 min-w-[30%] py-3 rounded-xl border items-center ${data.daysPerWeek === d ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800'}`}>
                   <Text className="text-white">{d} {d === 1 ? 'día' : 'días'}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <Text className="text-zinc-400 font-medium mt-2">
-              Minutos por sesión: <Text className="text-white font-bold">{data.session_duration_min}</Text>
+              Minutos por sesión: <Text className="text-white font-bold">{data.sessionDurationMin}</Text>
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {DURATION_OPTIONS.map((m) => (
-                <TouchableOpacity key={m} onPress={() => setData((p) => ({ ...p, session_duration_min: m }))}
-                  className={`flex-1 min-w-[30%] py-3 rounded-xl border items-center ${data.session_duration_min === m ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800'}`}>
+                <TouchableOpacity key={m} onPress={() => setData((p) => ({ ...p, sessionDurationMin: m }))}
+                  className={`flex-1 min-w-[30%] py-3 rounded-xl border items-center ${data.sessionDurationMin === m ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800'}`}>
                   <Text className="text-white">{m} min</Text>
                 </TouchableOpacity>
               ))}
@@ -177,7 +178,6 @@ export default function OnboardingScreen() {
         )}
       </ScrollView>
 
-      {/* Navigation */}
       <View className="flex-row gap-3 px-6 pb-10 pt-4 border-t border-zinc-900">
         {step > 1 && (
           <TouchableOpacity onPress={() => setStep(s => s - 1)}

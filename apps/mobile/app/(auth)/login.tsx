@@ -1,21 +1,31 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Link } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import { signInWithEmail } from '@forja/api-client';
+import { Link, useRouter } from 'expo-router';
+import { useSignIn } from '@clerk/clerk-expo';
 
 export default function LoginScreen() {
+  const { signIn, isLoaded, setActive } = useSignIn();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
+    if (!isLoaded) return;
     setLoading(true);
     setError('');
-    const { error } = await signInWithEmail(supabase, email, password);
-    if (error) setError('Email o contraseña incorrectos');
-    setLoading(false);
+    try {
+      const result = await signIn.create({ identifier: email, password });
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId });
+        router.replace('/(app)/home');
+      }
+    } catch {
+      setError('Email o contraseña incorrectos');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -31,29 +41,15 @@ export default function LoginScreen() {
         </View>
 
         <View className="gap-4">
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            placeholderTextColor="#71717a"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            className="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4 text-white text-base"
-          />
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Contraseña"
-            placeholderTextColor="#71717a"
-            secureTextEntry
-            className="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4 text-white text-base"
-          />
+          <TextInput value={email} onChangeText={setEmail} placeholder="Email"
+            placeholderTextColor="#71717a" keyboardType="email-address" autoCapitalize="none"
+            className="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4 text-white text-base" />
+          <TextInput value={password} onChangeText={setPassword} placeholder="Contraseña"
+            placeholderTextColor="#71717a" secureTextEntry
+            className="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4 text-white text-base" />
           {error ? <Text className="text-red-400 text-sm">{error}</Text> : null}
-          <TouchableOpacity
-            onPress={handleLogin}
-            disabled={loading}
-            className="bg-orange-500 rounded-2xl py-4 items-center"
-          >
+          <TouchableOpacity onPress={handleLogin} disabled={loading || !isLoaded}
+            className="bg-orange-500 rounded-2xl py-4 items-center">
             <Text className="text-white font-bold text-base">
               {loading ? 'Entrando...' : 'Entrar'}
             </Text>

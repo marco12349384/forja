@@ -1,31 +1,33 @@
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { tokenCache } from '@/lib/tokenCache';
 import { Slot, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import type { Session } from '@supabase/supabase-js';
+import { useEffect } from 'react';
 
-export default function RootLayout() {
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+
+function InitialLayout() {
+  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const segments = useSegments();
-  const [session, setSession] = useState<Session | null | undefined>(undefined);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (session === undefined) return;
+    if (!isLoaded) return;
     const inAuth = segments[0] === '(auth)';
 
-    if (!session && !inAuth) {
+    if (!isSignedIn && !inAuth) {
       router.replace('/(auth)/login');
-    } else if (session && (inAuth || segments.length === 0)) {
+    } else if (isSignedIn && (inAuth || segments.length === 0)) {
       router.replace('/(app)/home');
     }
-  }, [session, segments]);
+  }, [isLoaded, isSignedIn, segments]);
 
   return <Slot />;
+}
+
+export default function RootLayout() {
+  return (
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <InitialLayout />
+    </ClerkProvider>
+  );
 }
