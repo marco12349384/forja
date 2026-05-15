@@ -501,12 +501,6 @@ function QuickLog() {
 // ── Main Home Screen ──────────────────────────────────────────────
 const DAYS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
-const DEFAULT_MISSIONS: MiniMission[] = [
-  { id: '1', label: 'Toma 2 vasos de agua al despertar', icon: '💧', done: false },
-  { id: '2', label: 'Camina 10 minutos al aire libre', icon: '🚶', done: false },
-  { id: '3', label: 'Desayuna con proteína hoy', icon: '🥚', done: false },
-];
-
 const SOCIO_MESSAGES = [
   '¿Dormiste bien? Tu cuerpo usa el sueño para construir músculo. Hoy es un buen día para entrenar fuerte.',
   'Recuerda: la consistencia supera a la intensidad. Un entrenamiento mediocre hoy vale más que el perfecto que nunca hiciste.',
@@ -521,8 +515,9 @@ export default function HomeScreen() {
   const [todayWorkout, setTodayWorkout] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [energy, setEnergy] = useState<EnergyLevel | null>(null);
-  const [missions, setMissions] = useState<MiniMission[]>(DEFAULT_MISSIONS);
-  const [score] = useState(72); // TODO: compute from actual data
+  const [missions, setMissions] = useState<MiniMission[]>([]);
+  const [score, setScore] = useState<number>(0);
+  const [scoreExplanation, setScoreExplanation] = useState<string | null>(null);
   const [socioMsg] = useState(SOCIO_MESSAGES[new Date().getDay() % SOCIO_MESSAGES.length]);
 
   useEffect(() => {
@@ -530,9 +525,35 @@ export default function HomeScreen() {
       try {
         const token = await getToken();
         if (!token) return;
-        const result = await apiCall('/api/me/today', token);
-        setPlan(result.plan);
-        setTodayWorkout(result.today);
+
+        // Parallelize all 3 initial fetches
+        const [todayResult, missionsResult, scoreResult] = await Promise.allSettled([
+          apiCall('/api/me/today', token),
+          apiCall('/api/mini-missions', token),
+          apiCall('/api/socio-score/today', token),
+        ]);
+
+        if (todayResult.status === 'fulfilled') {
+          setPlan(todayResult.value.plan);
+          setTodayWorkout(todayResult.value.today);
+        }
+
+        if (missionsResult.status === 'fulfilled' && Array.isArray(missionsResult.value)) {
+          setMissions(
+            missionsResult.value.map((m: any) => ({
+              id: String(m.id),
+              label: String(m.label),
+              icon: String(m.icon),
+              done: Boolean(m.done),
+            })),
+          );
+        }
+
+        if (scoreResult.status === 'fulfilled') {
+          const s = scoreResult.value;
+          if (typeof s.total === 'number') setScore(s.total);
+          if (typeof s.explanation === 'string') setScoreExplanation(s.explanation);
+        }
       } catch {
         // Silently continue — show empty state
       } finally {
@@ -542,10 +563,41 @@ export default function HomeScreen() {
     load();
   }, []);
 
-  function toggleMission(id: string) {
+  async function toggleMission(id: string) {
+    // Optimistic update: mark as done locally immediately
     setMissions((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, done: !m.done } : m))
+      prev.map((m) => (m.id === id && !m.done ? { ...m, done: true } : m)),
     );
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await apiCall(`/api/mini-missions/${id}/complete`, token, { method: 'POST' });
+      // Refresh missions and score in parallel after completing
+      const [missionsResult, scoreResult] = await Promise.allSettled([
+        apiCall('/api/mini-missions', token),
+        apiCall('/api/socio-score/today', token),
+      ]);
+      if (missionsResult.status === 'fulfilled' && Array.isArray(missionsResult.value)) {
+        setMissions(
+          missionsResult.value.map((m: any) => ({
+            id: String(m.id),
+            label: String(m.label),
+            icon: String(m.icon),
+            done: Boolean(m.done),
+          })),
+        );
+      }
+      if (scoreResult.status === 'fulfilled') {
+        const s = scoreResult.value;
+        if (typeof s.total === 'number') setScore(s.total);
+        if (typeof s.explanation === 'string') setScoreExplanation(s.explanation);
+      }
+    } catch {
+      // Revert optimistic update on failure
+      setMissions((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, done: false } : m)),
+      );
+    }
   }
 
   const todayName = DAYS_ES[new Date().getDay()];
@@ -595,6 +647,20 @@ export default function HomeScreen() {
 
       {/* ── SOCIO Score ── */}
       <SOCIOScoreCard score={score} />
+      {scoreExplanation ? (
+        <Text
+          style={{
+            fontFamily: 'DMSans_400Regular',
+            fontSize: 13,
+            color: colors.muted,
+            marginTop: -spacing.sm,
+            paddingHorizontal: 2,
+            lineHeight: 18,
+          }}
+        >
+          {scoreExplanation}
+        </Text>
+      ) : null}
 
       {/* ── Plan del Día ── */}
       <View>
