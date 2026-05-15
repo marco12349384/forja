@@ -17,11 +17,16 @@ function buildExplanation(components: {
   movement: number;
   hydration: number;
 }): string {
-  if (components.movement < 10) return 'Aún no te has movido hoy.';
-  if (components.hydration < 10) return 'Te falta agua hoy.';
-  if (components.nutrition < 10) return 'Te falta comida hoy.';
-  if (components.sleep < 10) return 'Hoy parece que dormiste poco.';
-  return 'Vas bien — sigue así.';
+  const entries: Array<[keyof typeof components, number, string]> = [
+    ['movement', components.movement, 'Aún no te has movido hoy.'],
+    ['hydration', components.hydration, 'Te falta agua hoy.'],
+    ['nutrition', components.nutrition, 'Te falta comida hoy.'],
+    ['sleep', components.sleep, 'Hoy parece que dormiste poco.'],
+  ];
+  const min = Math.min(...entries.map(([, v]) => v));
+  if (min >= 10) return 'Vas bien — sigue así.';
+  const worst = entries.find(([, v]) => v === min);
+  return worst ? worst[2] : 'Vas bien — sigue así.';
 }
 
 export async function GET() {
@@ -97,11 +102,13 @@ export async function GET() {
       const goal = Number(row.kcal_goal ?? 2000);
       if (goal > 0) {
         const ratio = consumed / goal;
-        // 0.8–1.1 of goal = full points
+        // 0.8–1.1 of goal = full points; overshoot penalty above 1.1
         if (ratio >= 0.8 && ratio <= 1.1) {
           nutritionPts = 25;
+        } else if (ratio < 0.8) {
+          nutritionPts = Math.round(ratio * 25);
         } else {
-          nutritionPts = Math.min(25, Math.round(ratio * 25));
+          nutritionPts = Math.max(0, Math.round(25 - (ratio - 1.1) * 25)); // overshoot penalty
         }
       }
     } else if (nutritionResult.status === 'rejected') {
