@@ -18,10 +18,8 @@ export async function POST(req: Request) {
     const name = user?.firstName ?? '';
 
     // Ensure user exists in DB and resolve DB user ID before AI call
-    await ensureUser(userId, email, name);
+    const dbUserId = await ensureUser(userId, email, name);
     const sql = getDb();
-    const userRows = await sql`SELECT id FROM users WHERE clerk_id = ${userId}`;
-    const dbUserId = userRows[0].id;
 
     // Save core fitness profile (now includes weight/height/age/gender)
     await saveUserProfile(userId, profile);
@@ -59,7 +57,11 @@ export async function POST(req: Request) {
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const raw = (message.content[0] as any).text.trim();
+    const first = message.content[0];
+    if (!first || first.type !== 'text') {
+      return NextResponse.json({ error: 'No se pudo generar el plan. Intenta de nuevo.' }, { status: 500 });
+    }
+    const raw = first.text.trim();
     const cleaned = raw.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
     const planData = JSON.parse(cleaned);
 
@@ -67,7 +69,8 @@ export async function POST(req: Request) {
     // Deactivate old plans
     await sql`UPDATE workout_plans SET is_active = false WHERE user_id = ${dbUserId}`;
 
-    const weeksTotal = planData.weeks?.length ?? 4;
+    const weeks: any[] = planData.weeks ?? [];
+    const weeksTotal = weeks.length || 4;
 
     const planRows = await sql`
       INSERT INTO workout_plans (user_id, name, weeks_total, generated_by_ai, is_active)
@@ -76,7 +79,7 @@ export async function POST(req: Request) {
     `;
     const planId = planRows[0].id;
 
-    for (const week of planData.weeks) {
+    for (const week of weeks) {
       const weekRows = await sql`
         INSERT INTO plan_weeks (plan_id, week_number, focus)
         VALUES (${planId}, ${week.week_number}, ${week.focus})
