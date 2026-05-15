@@ -1,25 +1,41 @@
 {
   "expo": {
-    "name": "Forja",
-    "slug": "forja",
-    "scheme": "forja",
+    "name": "PULSO",
+    "slug": "pulso",
+    "scheme": "pulso",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
-    "backgroundColor": "#000000",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#F7F3EF",
     "splash": {
-      "backgroundColor": "#000000"
+      "backgroundColor": "#2D1B69",
+      "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.forja.app"
+      "bundleIdentifier": "com.pulso.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#000000"
+        "backgroundColor": "#2D1B69"
       },
-      "package": "com.forja.app"
+      "package": "com.pulso.app"
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "node_modules/@expo-google-fonts/playfair-display/PlayfairDisplay_700Bold.ttf",
+            "node_modules/@expo-google-fonts/playfair-display/PlayfairDisplay_500Medium.ttf",
+            "node_modules/@expo-google-fonts/dm-sans/DMSans_400Regular.ttf",
+            "node_modules/@expo-google-fonts/dm-sans/DMSans_500Medium.ttf",
+            "node_modules/@expo-google-fonts/dm-sans/DMSans_700Bold.ttf",
+            "node_modules/@expo-google-fonts/space-mono/SpaceMono_400Regular.ttf"
+          ]
+        }
+      ]
+    ]
   }
 }

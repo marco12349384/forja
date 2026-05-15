@@ -1,60 +1,205 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { apiCall } from '@/lib/api';
+import { colors, spacing, radius, shadows } from '@/design/tokens';
 import type { OnboardingData, FitnessGoal, FitnessLevel, Equipment } from '@forja/types';
 
-const GOALS: { value: FitnessGoal; label: string; emoji: string }[] = [
-  { value: 'perder_peso', label: 'Perder peso', emoji: '🔥' },
-  { value: 'ganar_musculo', label: 'Ganar músculo', emoji: '💪' },
-  { value: 'resistencia', label: 'Resistencia', emoji: '🏃' },
-  { value: 'movilidad', label: 'Movilidad', emoji: '🧘' },
-  { value: 'fitness_general', label: 'Fitness general', emoji: '⚡' },
+// ── Extended onboarding data ─────────────────────────────────────
+interface PulsoOnboardingData extends Partial<OnboardingData> {
+  weightKg?: number;
+  heightCm?: number;
+  age?: number;
+  gender?: 'masculino' | 'femenino' | 'otro';
+  mainChallenge?: string;
+  trainingLocation?: string;
+  dietType?: string;
+  cookingFreq?: string;
+  budget?: string;
+  allergies?: string[];
+  injuries?: string[];
+}
+
+const TOTAL_STEPS = 7;
+
+// ── Step data ────────────────────────────────────────────────────
+const GOALS: { value: FitnessGoal; label: string; icon: string; desc: string }[] = [
+  { value: 'perder_peso', label: 'Perder grasa', icon: '🔥', desc: 'Reducir % de grasa corporal' },
+  { value: 'ganar_musculo', label: 'Ganar músculo', icon: '💪', desc: 'Aumentar masa y fuerza' },
+  { value: 'resistencia', label: 'Resistencia', icon: '🏃', desc: 'Aguantar más, cansar menos' },
+  { value: 'movilidad', label: 'Flexibilidad', icon: '🧘', desc: 'Yoga, pilates, movilidad' },
+  { value: 'fitness_general', label: 'Bienestar general', icon: '🌿', desc: 'Todo en balance' },
 ];
 
-const LEVELS: { value: FitnessLevel; label: string; description: string }[] = [
-  { value: 'principiante', label: 'Principiante', description: 'Menos de 6 meses entrenando' },
-  { value: 'intermedio', label: 'Intermedio', description: '6 meses a 2 años' },
-  { value: 'avanzado', label: 'Avanzado', description: 'Más de 2 años' },
+const LEVELS: { value: FitnessLevel; label: string; desc: string; icon: string }[] = [
+  { value: 'principiante', label: 'Sedentario / Principiante', desc: 'Menos de 6 meses activo', icon: '🌱' },
+  { value: 'intermedio', label: 'Intermedio', desc: '1-2 años entrenando', icon: '🌿' },
+  { value: 'avanzado', label: 'Avanzado', desc: '3+ años, entreno seguido', icon: '🌳' },
 ];
 
-const EQUIPMENT_OPTIONS: { value: Equipment; label: string; emoji: string }[] = [
-  { value: 'ninguno', label: 'Sin equipo', emoji: '🏠' },
-  { value: 'mancuernas', label: 'Mancuernas', emoji: '🏋️' },
-  { value: 'barra', label: 'Barra', emoji: '🔩' },
-  { value: 'anillas', label: 'Anillas', emoji: '⭕' },
-  { value: 'bandas', label: 'Bandas', emoji: '🔗' },
-  { value: 'gym_completo', label: 'Gimnasio completo', emoji: '🏟️' },
+const EQUIPMENT_LIST: { value: Equipment; label: string; icon: string }[] = [
+  { value: 'ninguno', label: 'Sin equipo', icon: '🏠' },
+  { value: 'mancuernas', label: 'Mancuernas', icon: '🏋️' },
+  { value: 'barra', label: 'Barra + pesas', icon: '🔩' },
+  { value: 'anillas', label: 'Anillas / TRX', icon: '⭕' },
+  { value: 'bandas', label: 'Bandas elásticas', icon: '🔗' },
+  { value: 'gym_completo', label: 'Gym completo', icon: '🏟️' },
+];
+
+const DIET_TYPES = [
+  { value: 'omnivoro', label: 'Omnívoro', icon: '🍖' },
+  { value: 'vegetariano', label: 'Vegetariano', icon: '🥦' },
+  { value: 'vegano', label: 'Vegano', icon: '🌱' },
+  { value: 'sin_gluten', label: 'Sin gluten', icon: '🌾' },
+  { value: 'sin_lactosa', label: 'Sin lactosa', icon: '🥛' },
+  { value: 'otro', label: 'Otra / Mixta', icon: '🍽️' },
+];
+
+const CHALLENGES = [
+  { value: 'motivacion', label: 'Mantener motivación', icon: '🔋' },
+  { value: 'tiempo', label: 'Falta de tiempo', icon: '⏰' },
+  { value: 'que_hacer', label: 'No sé qué hacer', icon: '❓' },
+  { value: 'dieta', label: 'Controlar la dieta', icon: '🥗' },
+];
+
+const TRAINING_LOCATIONS = [
+  { value: 'casa_sin', label: 'Casa sin equipo', icon: '🛋️' },
+  { value: 'casa_con', label: 'Casa con equipo', icon: '🏠' },
+  { value: 'gym', label: 'Gym completo', icon: '🏋️' },
+  { value: 'exterior', label: 'Al aire libre', icon: '🌳' },
+  { value: 'varia', label: 'Varía', icon: '🔄' },
 ];
 
 const DAYS_OPTIONS = [1, 2, 3, 4, 5, 6];
-const DURATION_OPTIONS = [20, 30, 45, 60, 75, 90];
+const DURATION_OPTIONS = [20, 45, 60, 90];
 
+// ── Reusable option button ────────────────────────────────────────
+function OptionBtn({
+  active,
+  onPress,
+  icon,
+  label,
+  desc,
+  accentColor = colors.primary,
+  half = false,
+}: {
+  active: boolean;
+  onPress: () => void;
+  icon: string;
+  label: string;
+  desc?: string;
+  accentColor?: string;
+  half?: boolean;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={{
+        flexDirection: half ? 'column' : 'row',
+        alignItems: half ? 'center' : 'flex-start',
+        gap: spacing.sm,
+        padding: spacing.md,
+        borderRadius: radius.md,
+        borderWidth: 1.5,
+        borderColor: active ? accentColor : colors.border,
+        backgroundColor: active ? `${accentColor}12` : colors.surface,
+        width: half ? '48%' : '100%',
+      }}
+    >
+      <Text style={{ fontSize: half ? 26 : 22 }}>{icon}</Text>
+      <View style={{ flex: half ? undefined : 1 }}>
+        <Text
+          style={{
+            fontFamily: active ? 'DMSans_700Bold' : 'DMSans_500Medium',
+            fontSize: 14,
+            color: active ? accentColor : colors.text,
+            textAlign: half ? 'center' : 'left',
+          }}
+        >
+          {label}
+        </Text>
+        {desc && (
+          <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.muted, marginTop: 2 }}>
+            {desc}
+          </Text>
+        )}
+      </View>
+      {active && !half && (
+        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: accentColor, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 11, color: '#FFF' }}>✓</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+// ── Step Header ──────────────────────────────────────────────────
+function StepHeader({ step, title, subtitle }: { step: number; title: string; subtitle?: string }) {
+  return (
+    <View style={{ gap: spacing.xs }}>
+      <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.ai, letterSpacing: 0.5 }}>
+        Paso {step} de {TOTAL_STEPS}
+      </Text>
+      <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 26, color: colors.text, lineHeight: 34 }}>
+        {title}
+      </Text>
+      {subtitle && (
+        <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, color: colors.muted, lineHeight: 20 }}>
+          {subtitle}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+// ── Main Onboarding ───────────────────────────────────────────────
 export default function OnboardingScreen() {
   const router = useRouter();
   const { getToken } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [data, setData] = useState<Partial<OnboardingData>>({
+
+  const [data, setData] = useState<PulsoOnboardingData>({
     equipment: [],
     injuries: [],
     daysPerWeek: 3,
     sessionDurationMin: 45,
+    allergies: [],
   });
 
-  function toggleEquipment(eq: Equipment) {
+  // ── Helpers ────────────────────────────────────────────────────
+  function toggle<T>(field: keyof PulsoOnboardingData, value: T) {
     setData((prev) => {
-      const current = prev.equipment ?? [];
-      return current.includes(eq)
-        ? { ...prev, equipment: current.filter((e) => e !== eq) }
-        : { ...prev, equipment: [...current, eq] };
+      const arr = (prev[field] as T[]) ?? [];
+      const next = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+      return { ...prev, [field]: next };
     });
   }
 
+  const canContinue = (() => {
+    if (step === 1) return !!data.goal;
+    if (step === 2) return !!(data.weightKg && data.heightCm && data.age);
+    if (step === 3) return !!data.fitnessLevel;
+    if (step === 4) return !!(data.daysPerWeek && data.sessionDurationMin);
+    if (step >= 5) return true; // optional steps
+    return true;
+  })();
+
   async function handleFinish() {
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
       const token = await getToken();
       if (!token) throw new Error('No autenticado');
@@ -64,141 +209,651 @@ export default function OnboardingScreen() {
       });
       router.replace('/(app)/home');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al generar tu plan');
+      setError(err instanceof Error ? err.message : 'Error al crear tu plan');
       setLoading(false);
     }
   }
 
-  const canContinue =
-    (step === 1 && !!data.goal) ||
-    (step === 2 && !!data.fitnessLevel) ||
-    step >= 3;
-
-  return (
-    <View className="flex-1 bg-black">
-      <View className="flex-row gap-1 px-6 pt-14 pb-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <View key={i} className={`flex-1 h-1 rounded-full ${i <= step ? 'bg-orange-500' : 'bg-zinc-800'}`} />
-        ))}
-      </View>
-
-      <ScrollView className="flex-1 px-6" contentContainerClassName="pb-6 gap-6">
-        {step === 1 && (
+  // ── STEP CONTENT ──────────────────────────────────────────────
+  function renderStep() {
+    switch (step) {
+      // STEP 1 — Objetivo
+      case 1:
+        return (
           <>
-            <Text className="text-2xl font-bold text-white">¿Cuál es tu objetivo?</Text>
+            <StepHeader step={1} title="¿Cuál es tu objetivo?" subtitle="Sé honesto contigo. No hay respuesta incorrecta." />
             {GOALS.map((g) => (
-              <TouchableOpacity key={g.value}
+              <OptionBtn
+                key={g.value}
+                active={data.goal === g.value}
                 onPress={() => setData((p) => ({ ...p, goal: g.value }))}
-                className={`flex-row items-center gap-4 p-4 rounded-2xl border ${data.goal === g.value ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900'}`}>
-                <Text className="text-2xl">{g.emoji}</Text>
-                <Text className="text-white font-semibold text-base">{g.label}</Text>
-              </TouchableOpacity>
+                icon={g.icon}
+                label={g.label}
+                desc={g.desc}
+                accentColor={colors.energy}
+              />
             ))}
           </>
-        )}
+        );
 
-        {step === 2 && (
+      // STEP 2 — Datos corporales
+      case 2:
+        return (
           <>
-            <Text className="text-2xl font-bold text-white">¿Cuál es tu nivel?</Text>
+            <StepHeader step={2} title="Cuéntame de tu cuerpo" subtitle="Esto permite a SOCIO calcular tus necesidades exactas." />
+
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              {/* Peso */}
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: 6 }}>Peso (kg)</Text>
+                <TextInput
+                  keyboardType="decimal-pad"
+                  value={data.weightKg?.toString() ?? ''}
+                  onChangeText={(v) => setData((p) => ({ ...p, weightKg: v ? parseFloat(v) : undefined }))}
+                  placeholder="70"
+                  placeholderTextColor={colors.subtle}
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderWidth: 1.5,
+                    borderColor: data.weightKg ? colors.primary : colors.border,
+                    borderRadius: radius.md,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: 14,
+                    fontFamily: 'DMSans_400Regular',
+                    fontSize: 16,
+                    color: colors.text,
+                  }}
+                />
+              </View>
+              {/* Altura */}
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: 6 }}>Altura (cm)</Text>
+                <TextInput
+                  keyboardType="number-pad"
+                  value={data.heightCm?.toString() ?? ''}
+                  onChangeText={(v) => setData((p) => ({ ...p, heightCm: v ? parseInt(v) : undefined }))}
+                  placeholder="175"
+                  placeholderTextColor={colors.subtle}
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderWidth: 1.5,
+                    borderColor: data.heightCm ? colors.primary : colors.border,
+                    borderRadius: radius.md,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: 14,
+                    fontFamily: 'DMSans_400Regular',
+                    fontSize: 16,
+                    color: colors.text,
+                  }}
+                />
+              </View>
+            </View>
+
+            {/* Edad */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: 6 }}>Edad</Text>
+              <TextInput
+                keyboardType="number-pad"
+                value={data.age?.toString() ?? ''}
+                onChangeText={(v) => setData((p) => ({ ...p, age: v ? parseInt(v) : undefined }))}
+                placeholder="25"
+                placeholderTextColor={colors.subtle}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderWidth: 1.5,
+                  borderColor: data.age ? colors.primary : colors.border,
+                  borderRadius: radius.md,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: 14,
+                  fontFamily: 'DMSans_400Regular',
+                  fontSize: 16,
+                  color: colors.text,
+                  width: '48%',
+                }}
+              />
+            </View>
+
+            {/* Sexo biológico */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>Sexo biológico</Text>
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                {(['masculino', 'femenino', 'otro'] as const).map((g) => (
+                  <TouchableOpacity
+                    key={g}
+                    onPress={() => setData((p) => ({ ...p, gender: g }))}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 12,
+                      borderRadius: radius.md,
+                      borderWidth: 1.5,
+                      borderColor: data.gender === g ? colors.ai : colors.border,
+                      backgroundColor: data.gender === g ? `${colors.ai}12` : colors.surface,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ fontFamily: data.gender === g ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: data.gender === g ? colors.ai : colors.muted, textTransform: 'capitalize' }}>
+                      {g}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.subtle, marginTop: 6 }}>
+                Se usa para ajustar cálculos hormonales y de recuperación.
+              </Text>
+            </View>
+          </>
+        );
+
+      // STEP 3 — Nivel + reto
+      case 3:
+        return (
+          <>
+            <StepHeader step={3} title="¿Cuál es tu nivel?" subtitle="Sé honesto — así SOCIO no te mata el primer día 😄" />
             {LEVELS.map((l) => (
-              <TouchableOpacity key={l.value}
+              <OptionBtn
+                key={l.value}
+                active={data.fitnessLevel === l.value}
                 onPress={() => setData((p) => ({ ...p, fitnessLevel: l.value }))}
-                className={`p-4 rounded-2xl border ${data.fitnessLevel === l.value ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900'}`}>
-                <Text className="text-white font-semibold">{l.label}</Text>
-                <Text className="text-zinc-400 text-sm">{l.description}</Text>
-              </TouchableOpacity>
+                icon={l.icon}
+                label={l.label}
+                desc={l.desc}
+                accentColor={colors.primary}
+              />
             ))}
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <Text className="text-2xl font-bold text-white">¿Qué equipo tienes?</Text>
-            <View className="flex-row flex-wrap gap-3">
-              {EQUIPMENT_OPTIONS.map((eq) => (
-                <TouchableOpacity key={eq.value} onPress={() => toggleEquipment(eq.value)}
-                  className={`items-center gap-2 p-4 rounded-2xl border w-[47%] ${data.equipment?.includes(eq.value) ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900'}`}>
-                  <Text className="text-2xl">{eq.emoji}</Text>
-                  <Text className="text-white text-sm font-medium text-center">{eq.label}</Text>
-                </TouchableOpacity>
-              ))}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm, marginTop: spacing.md }}>
+                ¿Cuál es tu mayor reto?
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                {CHALLENGES.map((c) => {
+                  const active = data.mainChallenge === c.value;
+                  return (
+                    <TouchableOpacity
+                      key={c.value}
+                      onPress={() => setData((p) => ({ ...p, mainChallenge: c.value }))}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingHorizontal: spacing.md,
+                        paddingVertical: 8,
+                        borderRadius: radius.full,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.primary : colors.border,
+                        backgroundColor: active ? `${colors.primary}12` : colors.surface,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14 }}>{c.icon}</Text>
+                      <Text style={{ fontFamily: active ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: active ? colors.primary : colors.muted }}>
+                        {c.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           </>
-        )}
+        );
 
-        {step === 4 && (
+      // STEP 4 — Disponibilidad
+      case 4:
+        return (
           <>
-            <Text className="text-2xl font-bold text-white">¿Cuánto tiempo tienes?</Text>
-            <Text className="text-zinc-400 font-medium">
-              Días por semana: <Text className="text-white font-bold">{data.daysPerWeek}</Text>
-            </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {DAYS_OPTIONS.map((d) => (
-                <TouchableOpacity key={d} onPress={() => setData((p) => ({ ...p, daysPerWeek: d }))}
-                  className={`flex-1 min-w-[30%] py-3 rounded-xl border items-center ${data.daysPerWeek === d ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800'}`}>
-                  <Text className="text-white">{d} {d === 1 ? 'día' : 'días'}</Text>
-                </TouchableOpacity>
-              ))}
+            <StepHeader step={4} title="¿Cuánto tiempo tienes?" subtitle="Sé realista con tu semana, no con la semana ideal." />
+
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.text, marginBottom: spacing.sm }}>
+                Días por semana:{' '}
+                <Text style={{ fontFamily: 'SpaceMono_400Regular', color: colors.energy, fontSize: 16 }}>
+                  {data.daysPerWeek}
+                </Text>
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+                {DAYS_OPTIONS.map((d) => {
+                  const active = data.daysPerWeek === d;
+                  return (
+                    <TouchableOpacity
+                      key={d}
+                      onPress={() => setData((p) => ({ ...p, daysPerWeek: d }))}
+                      style={{
+                        flex: 1,
+                        height: 44,
+                        borderRadius: radius.md,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.energy : colors.border,
+                        backgroundColor: active ? `${colors.energy}15` : colors.surface,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ fontFamily: active ? 'SpaceMono_400Regular' : 'DMSans_400Regular', fontSize: 16, color: active ? colors.energy : colors.muted }}>
+                        {d}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-            <Text className="text-zinc-400 font-medium mt-2">
-              Minutos por sesión: <Text className="text-white font-bold">{data.sessionDurationMin}</Text>
-            </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {DURATION_OPTIONS.map((m) => (
-                <TouchableOpacity key={m} onPress={() => setData((p) => ({ ...p, sessionDurationMin: m }))}
-                  className={`flex-1 min-w-[30%] py-3 rounded-xl border items-center ${data.sessionDurationMin === m ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800'}`}>
-                  <Text className="text-white">{m} min</Text>
-                </TouchableOpacity>
-              ))}
+
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.text, marginBottom: spacing.sm }}>
+                Minutos por sesión:{' '}
+                <Text style={{ fontFamily: 'SpaceMono_400Regular', color: colors.energy, fontSize: 16 }}>
+                  {data.sessionDurationMin} min
+                </Text>
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+                {DURATION_OPTIONS.map((m) => {
+                  const active = data.sessionDurationMin === m;
+                  return (
+                    <TouchableOpacity
+                      key={m}
+                      onPress={() => setData((p) => ({ ...p, sessionDurationMin: m }))}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 12,
+                        borderRadius: radius.md,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.energy : colors.border,
+                        backgroundColor: active ? `${colors.energy}15` : colors.surface,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: active ? colors.energy : colors.muted }}>
+                        {m} min
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           </>
-        )}
+        );
 
-        {step === 5 && (
+      // STEP 5 — Cuerpo + lesiones
+      case 5:
+        return (
           <>
-            <Text className="text-2xl font-bold text-white">¿Alguna restricción?</Text>
-            <Text className="text-zinc-400">Lesiones, zonas a evitar (opcional)</Text>
-            <TextInput
-              value={data.injuries?.join(', ') ?? ''}
-              onChangeText={(t) => setData((p) => ({ ...p, injuries: t ? t.split(',').map(s => s.trim()).filter(Boolean) : [] }))}
-              placeholder="Ej: rodilla derecha, lumbar..."
-              placeholderTextColor="#71717a"
-              multiline numberOfLines={3}
-              className="bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white"
-            />
-            {error ? <Text className="text-red-400 text-sm">{error}</Text> : null}
+            <StepHeader step={5} title="Limitaciones físicas" subtitle="Esto es importante para evitar lesiones. Es opcional." />
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                ¿Alguna lesión o zona a evitar?
+              </Text>
+              <TextInput
+                value={data.injuries?.join(', ') ?? ''}
+                onChangeText={(t) =>
+                  setData((p) => ({
+                    ...p,
+                    injuries: t ? t.split(',').map((s) => s.trim()).filter(Boolean) : [],
+                  }))
+                }
+                placeholder="Ej: rodilla derecha, lumbar, hombro izquierdo..."
+                placeholderTextColor={colors.subtle}
+                multiline
+                numberOfLines={3}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderWidth: 1.5,
+                  borderColor: colors.border,
+                  borderRadius: radius.md,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.md,
+                  fontFamily: 'DMSans_400Regular',
+                  fontSize: 14,
+                  color: colors.text,
+                  minHeight: 90,
+                  textAlignVertical: 'top',
+                }}
+              />
+            </View>
+          </>
+        );
+
+      // STEP 6 — Equipamiento
+      case 6:
+        return (
+          <>
+            <StepHeader step={6} title="¿Dónde y con qué entrenas?" />
+
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                Lugar principal de entrenamiento
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                {TRAINING_LOCATIONS.map((loc) => {
+                  const active = data.trainingLocation === loc.value;
+                  return (
+                    <TouchableOpacity
+                      key={loc.value}
+                      onPress={() => setData((p) => ({ ...p, trainingLocation: loc.value }))}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingHorizontal: spacing.md,
+                        paddingVertical: 10,
+                        borderRadius: radius.full,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.calm : colors.border,
+                        backgroundColor: active ? `${colors.calm}15` : colors.surface,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14 }}>{loc.icon}</Text>
+                      <Text style={{ fontFamily: active ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: active ? colors.calm : colors.muted }}>
+                        {loc.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                Equipo disponible (varios)
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                {EQUIPMENT_LIST.map((eq) => {
+                  const active = (data.equipment ?? []).includes(eq.value);
+                  return (
+                    <TouchableOpacity
+                      key={eq.value}
+                      onPress={() => toggle<Equipment>('equipment', eq.value)}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingHorizontal: spacing.md,
+                        paddingVertical: 10,
+                        borderRadius: radius.full,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.calm : colors.border,
+                        backgroundColor: active ? `${colors.calm}15` : colors.surface,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14 }}>{eq.icon}</Text>
+                      <Text style={{ fontFamily: active ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: active ? colors.calm : colors.muted }}>
+                        {eq.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </>
+        );
+
+      // STEP 7 — Dieta
+      case 7:
+        return (
+          <>
+            <StepHeader step={7} title="Tu alimentación" subtitle="SOCIO te sugerirá comidas que realmente puedas preparar." />
+
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                Tipo de dieta
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                {DIET_TYPES.map((dt) => {
+                  const active = data.dietType === dt.value;
+                  return (
+                    <TouchableOpacity
+                      key={dt.value}
+                      onPress={() => setData((p) => ({ ...p, dietType: dt.value }))}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingHorizontal: spacing.md,
+                        paddingVertical: 10,
+                        borderRadius: radius.full,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.calm : colors.border,
+                        backgroundColor: active ? `${colors.calm}15` : colors.surface,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14 }}>{dt.icon}</Text>
+                      <Text style={{ fontFamily: active ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: active ? colors.calm : colors.muted }}>
+                        {dt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                Presupuesto semanal para comida
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                {[
+                  { value: 'bajo', label: 'Ajustado', icon: '💰' },
+                  { value: 'medio', label: 'Normal', icon: '💵' },
+                  { value: 'alto', label: 'Sin límite', icon: '💎' },
+                ].map((b) => {
+                  const active = data.budget === b.value;
+                  return (
+                    <TouchableOpacity
+                      key={b.value}
+                      onPress={() => setData((p) => ({ ...p, budget: b.value }))}
+                      style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        paddingVertical: 14,
+                        borderRadius: radius.md,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.calm : colors.border,
+                        backgroundColor: active ? `${colors.calm}15` : colors.surface,
+                        gap: 4,
+                      }}
+                    >
+                      <Text style={{ fontSize: 20 }}>{b.icon}</Text>
+                      <Text style={{ fontFamily: active ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: active ? colors.calm : colors.muted }}>
+                        {b.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                ¿Cocinas en casa?
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                {[
+                  { value: 'siempre', label: 'Siempre' },
+                  { value: 'aveces', label: 'A veces' },
+                  { value: 'casi_nunca', label: 'Casi nunca' },
+                ].map((c) => {
+                  const active = data.cookingFreq === c.value;
+                  return (
+                    <TouchableOpacity
+                      key={c.value}
+                      onPress={() => setData((p) => ({ ...p, cookingFreq: c.value }))}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 12,
+                        borderRadius: radius.md,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.calm : colors.border,
+                        backgroundColor: active ? `${colors.calm}15` : colors.surface,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ fontFamily: active ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: active ? colors.calm : colors.muted }}>
+                        {c.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Allergies */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                Alergias o intolerancias (opcional)
+              </Text>
+              <TextInput
+                value={data.allergies?.join(', ') ?? ''}
+                onChangeText={(t) =>
+                  setData((p) => ({
+                    ...p,
+                    allergies: t ? t.split(',').map((s) => s.trim()).filter(Boolean) : [],
+                  }))
+                }
+                placeholder="Ej: gluten, mariscos, nueces..."
+                placeholderTextColor={colors.subtle}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderWidth: 1.5,
+                  borderColor: colors.border,
+                  borderRadius: radius.md,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: 14,
+                  fontFamily: 'DMSans_400Regular',
+                  fontSize: 14,
+                  color: colors.text,
+                }}
+              />
+            </View>
+
+            {error ? (
+              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.error }}>
+                {error}
+              </Text>
+            ) : null}
+
             {loading && (
-              <View className="items-center gap-3 py-4">
-                <ActivityIndicator color="#f97316" size="large" />
-                <Text className="text-zinc-400">Forjando tu plan personalizado...</Text>
-                <Text className="text-zinc-600 text-sm">Esto puede tardar 10-15 segundos</Text>
+              <View style={{ alignItems: 'center', gap: spacing.md, paddingVertical: spacing.lg }}>
+                <ActivityIndicator color={colors.primary} size="large" />
+                <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 18, color: colors.text, textAlign: 'center' }}>
+                  SOCIO está creando tu plan...
+                </Text>
+                <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.muted }}>
+                  Esto puede tardar unos segundos
+                </Text>
               </View>
             )}
           </>
+        );
+
+      default:
+        return null;
+    }
+  }
+
+  return (
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Progress bar */}
+      <View style={{ paddingTop: 56, paddingHorizontal: spacing.lg, paddingBottom: spacing.md }}>
+        <View style={{ flexDirection: 'row', gap: 4 }}>
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+            <View
+              key={i}
+              style={{
+                flex: 1,
+                height: 3,
+                borderRadius: 2,
+                backgroundColor: i < step ? colors.primary : `${colors.primary}20`,
+              }}
+            />
+          ))}
+        </View>
+        {step > 4 && (
+          <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.subtle, marginTop: 6, textAlign: 'right' }}>
+            Opcional — puedes continuar
+          </Text>
         )}
+      </View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: spacing.lg,
+          paddingBottom: 100,
+          gap: spacing.lg,
+        }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {renderStep()}
       </ScrollView>
 
-      <View className="flex-row gap-3 px-6 pb-10 pt-4 border-t border-zinc-900">
+      {/* Navigation buttons */}
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: spacing.sm,
+          paddingHorizontal: spacing.lg,
+          paddingBottom: Platform.OS === 'ios' ? 40 : spacing.lg,
+          paddingTop: spacing.md,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          backgroundColor: colors.bg,
+        }}
+      >
         {step > 1 && (
-          <TouchableOpacity onPress={() => setStep(s => s - 1)}
-            className="flex-1 border border-zinc-700 rounded-2xl py-4 items-center">
-            <Text className="text-zinc-300 font-semibold">Atrás</Text>
+          <TouchableOpacity
+            onPress={() => setStep((s) => s - 1)}
+            style={{
+              flex: 1,
+              paddingVertical: 16,
+              borderRadius: radius.md,
+              borderWidth: 1.5,
+              borderColor: colors.border,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 16, color: colors.muted }}>
+              Atrás
+            </Text>
           </TouchableOpacity>
         )}
-        {step < 5 ? (
-          <TouchableOpacity onPress={() => setStep(s => s + 1)} disabled={!canContinue}
-            className={`flex-1 bg-orange-500 rounded-2xl py-4 items-center ${!canContinue ? 'opacity-40' : ''}`}>
-            <Text className="text-white font-bold">Continuar</Text>
+
+        {step < TOTAL_STEPS ? (
+          <TouchableOpacity
+            onPress={() => setStep((s) => s + 1)}
+            disabled={!canContinue}
+            style={[
+              {
+                flex: step > 1 ? 2 : 1,
+                paddingVertical: 16,
+                borderRadius: radius.md,
+                alignItems: 'center',
+                backgroundColor: canContinue ? colors.primary : `${colors.primary}40`,
+              },
+              canContinue ? shadows.card : undefined,
+            ]}
+          >
+            <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 16, color: '#FFF' }}>
+              Continuar
+            </Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={handleFinish} disabled={loading}
-            className="flex-1 bg-orange-500 rounded-2xl py-4 items-center">
-            <Text className="text-white font-bold">
-              {loading ? 'Forjando plan...' : '⚒️ Crear mi plan con IA'}
+          <TouchableOpacity
+            onPress={handleFinish}
+            disabled={loading}
+            style={[
+              {
+                flex: 2,
+                paddingVertical: 16,
+                borderRadius: radius.md,
+                alignItems: 'center',
+                backgroundColor: loading ? `${colors.energy}60` : colors.energy,
+              },
+              !loading ? shadows.energy : undefined,
+            ]}
+          >
+            <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 16, color: '#FFF' }}>
+              {loading ? 'Creando plan...' : 'Crear mi plan con SOCIO ✨'}
             </Text>
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

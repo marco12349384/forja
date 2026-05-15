@@ -145,3 +145,86 @@ export interface GeneratePlanResponse {
   plan_id: string;
   plan_name: string;
 }
+
+// ── PULSO — New feature types ─────────────────────────────────────
+
+/** User's daily energy check-in */
+export type EnergyLevel = 1 | 2 | 3; // 1=cansado, 2=normal, 3=con_todo
+
+/** Computed daily wellness score (0-100) */
+export interface SOCIOScore {
+  total: number;        // 0-100
+  sleep: number;        // 0-25
+  nutrition: number;    // 0-25
+  movement: number;     // 0-25
+  hydration: number;    // 0-25
+  date: string;         // ISO date
+  narrative?: string;   // SOCIO's explanation
+}
+
+/** Daily micro-challenge */
+export interface MiniMission {
+  id: string;
+  label: string;
+  icon: string;
+  done: boolean;
+  category: 'nutrition' | 'movement' | 'hydration' | 'mindset';
+  pointsValue: number;
+}
+
+/** Extended user dietary profile */
+export interface DietProfile {
+  user_id: string;
+  diet_type: 'omnivoro' | 'vegetariano' | 'vegano' | 'sin_gluten' | 'sin_lactosa' | 'otro';
+  allergies: string[];
+  budget: 'bajo' | 'medio' | 'alto';
+  cooking_freq: 'siempre' | 'aveces' | 'casi_nunca';
+}
+
+/** Tracked daily macros */
+export interface DailyNutrition {
+  user_id: string;
+  date: string;
+  kcal_consumed: number;
+  kcal_goal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  water_glasses: number;
+}
+
+/** SOCIO chat message */
+export interface SOCIOMessage {
+  id: string;
+  user_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+}
+
+/** Weekly retrospective */
+export interface WeeklyRetro {
+  id: string;
+  user_id: string;
+  week_number: number;
+  year: number;
+  completed_workouts: number;
+  planned_workouts: number;
+  avg_socio_score: number;
+  narrative: string; // SOCIO-generated
+  created_at: string;
+}
+
+/** Extended onboarding (PULSO v1) */
+export interface PulsoOnboardingData extends OnboardingData {
+  weightKg?: number;
+  heightCm?: number;
+  age?: number;
+  gender?: 'masculino' | 'femenino' | 'otro';
+  mainChallenge?: string;
+  trainingLocation?: string;
+  dietType?: string;
+  cookingFreq?: string;
+  budget?: string;
+  allergies?: string[];
+}

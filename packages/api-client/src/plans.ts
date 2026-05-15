@@ -1,7 +1,7 @@
-import type { WorkoutPlan, OnboardingData } from '@forja/types';
+import type { WorkoutPlan, PulsoOnboardingData } from '@forja/types';
 import { getDb } from './db';
 
-export async function saveUserProfile(clerkId: string, data: OnboardingData): Promise<void> {
+export async function saveUserProfile(clerkId: string, data: PulsoOnboardingData): Promise<void> {
   const sql = getDb();
   const users = await sql`SELECT id FROM users WHERE clerk_id = ${clerkId}`;
   if (users.length === 0) throw new Error('User not found');
@@ -10,11 +10,20 @@ export async function saveUserProfile(clerkId: string, data: OnboardingData): Pr
   await sql`
     INSERT INTO user_profiles (
       user_id, fitness_level, goal, available_equipment,
-      days_per_week, session_duration_min, injuries
+      days_per_week, session_duration_min, injuries,
+      weight_kg, height_cm, age, gender
     ) VALUES (
-      ${userId}, ${data.fitnessLevel}, ${data.goal},
-      ${sql.array(data.equipment)}, ${data.daysPerWeek},
-      ${data.sessionDurationMin}, ${sql.array(data.injuries ?? [])}
+      ${userId},
+      ${data.fitnessLevel ?? (data as any).fitness_level},
+      ${data.goal},
+      ${sql.array(data.equipment ?? (data as any).available_equipment ?? [])},
+      ${data.daysPerWeek ?? (data as any).days_per_week},
+      ${data.sessionDurationMin ?? (data as any).session_duration_min},
+      ${sql.array(data.injuries ?? [])},
+      ${data.weightKg ?? null},
+      ${data.heightCm ?? null},
+      ${data.age ?? null},
+      ${data.gender ?? null}
     )
     ON CONFLICT (user_id) DO UPDATE SET
       fitness_level = EXCLUDED.fitness_level,
@@ -23,6 +32,10 @@ export async function saveUserProfile(clerkId: string, data: OnboardingData): Pr
       days_per_week = EXCLUDED.days_per_week,
       session_duration_min = EXCLUDED.session_duration_min,
       injuries = EXCLUDED.injuries,
+      weight_kg = EXCLUDED.weight_kg,
+      height_cm = EXCLUDED.height_cm,
+      age = EXCLUDED.age,
+      gender = EXCLUDED.gender,
       updated_at = now()
   `;
 }

@@ -1,6 +1,8 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getDb, ensureUser, saveUserProfile } from '@forja/api-client';
+import { buildGeneratePlanPrompt } from '@forja/ai';
+import type { PulsoOnboardingData } from '@forja/types';
 import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -10,59 +12,49 @@ export async function POST(req: Request) {
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { profile } = await req.json();
+    const { profile }: { profile: PulsoOnboardingData } = await req.json();
     const user = await currentUser();
     const email = user?.emailAddresses[0]?.emailAddress ?? '';
     const name = user?.firstName ?? '';
 
-    // Ensure user exists in DB
+    // Ensure user exists in DB and resolve DB user ID before AI call
     await ensureUser(userId, email, name);
+    const sql = getDb();
+    const userRows = await sql`SELECT id FROM users WHERE clerk_id = ${userId}`;
+    const dbUserId = userRows[0].id;
+
+    // Save core fitness profile (now includes weight/height/age/gender)
     await saveUserProfile(userId, profile);
 
-    // Build prompt
-    const prompt = `Eres un coach de fitness experto. Genera un plan de entrenamiento personalizado en JSON para:
-- Objetivo: ${profile.goal}
-- Nivel: ${profile.fitnessLevel}
-- Equipo disponible: ${(profile.equipment ?? []).join(', ') || 'ninguno'}
-- Días por semana: ${profile.daysPerWeek}
-- Minutos por sesión: ${profile.sessionDurationMin}
-- Restricciones/lesiones: ${(profile.injuries ?? []).join(', ') || 'ninguna'}
-
-Responde SOLO con este JSON (sin markdown, sin explicaciones):
-{
-  "plan_name": "nombre motivador del plan",
-  "weeks_total": 4,
-  "weeks": [
-    {
-      "week_number": 1,
-      "focus": "descripción del foco de la semana",
-      "workouts": [
-        {
-          "day_of_week": "lunes",
-          "name": "nombre del workout",
-          "type": "calistenia|gym|home|cardio|yoga|movilidad",
-          "estimated_duration_min": 45,
-          "difficulty": "principiante|intermedio|avanzado",
-          "exercises": [
-            {
-              "exercise_slug": "flexion-brazos",
-              "sets": 3,
-              "reps": "10",
-              "rest_seconds": 60
-            }
-          ]
-        }
-      ]
+    // Save diet profile (PULSO extended fields)
+    if (profile.dietType || profile.budget || profile.cookingFreq || profile.allergies) {
+      await sql`
+        INSERT INTO diet_profiles (user_id, diet_type, allergies, budget, cooking_freq, training_location, main_challenge)
+        VALUES (
+          ${dbUserId},
+          ${profile.dietType ?? 'omnivoro'},
+          ${sql.array(profile.allergies ?? [])},
+          ${profile.budget ?? 'medio'},
+          ${profile.cookingFreq ?? 'aveces'},
+          ${profile.trainingLocation ?? null},
+          ${profile.mainChallenge ?? null}
+        )
+        ON CONFLICT (user_id) DO UPDATE SET
+          diet_type = EXCLUDED.diet_type,
+          allergies = EXCLUDED.allergies,
+          budget = EXCLUDED.budget,
+          cooking_freq = EXCLUDED.cooking_freq,
+          training_location = EXCLUDED.training_location,
+          main_challenge = EXCLUDED.main_challenge,
+          updated_at = now()
+      `;
     }
-  ]
-}
 
-Slugs disponibles: flexion-brazos, flexion-diamante, flexion-arquero, sentadilla, pistol-squat, dominada, dominada-lastrada, press-banca, press-inclinado, apertura-mancuernas, fondos-paralelas, hollow-body-hold, l-sit, plancha, muscle-up
-
-Genera exactamente ${profile.daysPerWeek} workouts por semana durante 4 semanas. Usa solo los slugs de la lista.`;
+    // Build prompt using PULSO context
+    const prompt = buildGeneratePlanPrompt(profile);
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5',
+      model: 'claude-3-5-sonnet-latest',
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -72,16 +64,14 @@ Genera exactamente ${profile.daysPerWeek} workouts por semana durante 4 semanas.
     const planData = JSON.parse(cleaned);
 
     // Save plan to DB
-    const sql = getDb();
-    const userRows = await sql`SELECT id FROM users WHERE clerk_id = ${userId}`;
-    const dbUserId = userRows[0].id;
-
     // Deactivate old plans
     await sql`UPDATE workout_plans SET is_active = false WHERE user_id = ${dbUserId}`;
 
+    const weeksTotal = planData.weeks?.length ?? 4;
+
     const planRows = await sql`
       INSERT INTO workout_plans (user_id, name, weeks_total, generated_by_ai, is_active)
-      VALUES (${dbUserId}, ${planData.plan_name}, ${planData.weeks_total}, true, true)
+      VALUES (${dbUserId}, ${planData.plan_name}, ${weeksTotal}, true, true)
       RETURNING id
     `;
     const planId = planRows[0].id;
@@ -106,13 +96,13 @@ Genera exactamente ${profile.daysPerWeek} workouts por semana durante 4 semanas.
         for (let i = 0; i < workout.exercises.length; i++) {
           const ex = workout.exercises[i];
           const catalogRows = await sql`
-            SELECT id FROM exercise_catalog WHERE slug = ${ex.exercise_slug}
+            SELECT id FROM exercise_catalog WHERE slug = ${ex.catalog_slug}
           `;
           if (catalogRows.length === 0) continue;
 
           await sql`
             INSERT INTO exercises (workout_id, catalog_id, order_index, sets, reps, rest_seconds)
-            VALUES (${workoutId}, ${catalogRows[0].id}, ${i}, ${ex.sets}, ${ex.reps}, ${ex.rest_seconds})
+            VALUES (${workoutId}, ${catalogRows[0].id}, ${ex.order_index ?? i}, ${ex.sets}, ${ex.reps}, ${ex.rest_seconds ?? 60})
           `;
         }
       }
@@ -121,6 +111,6 @@ Genera exactamente ${profile.daysPerWeek} workouts por semana durante 4 semanas.
     return NextResponse.json({ plan_id: planId, plan_name: planData.plan_name });
   } catch (err: any) {
     console.error('generate-plan error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'No se pudo generar el plan. Intenta de nuevo.' }, { status: 500 });
   }
 }
