@@ -423,8 +423,14 @@ export default function WorkoutPlayerScreen() {
         (new Date().getTime() - startTime.getTime()) / 60000
       );
       const exerciseCount = workout.exercises.length;
+      // Compute set counts for completion tracking
+      const totalSetsCount = workout.exercises.reduce((sum, ex) => sum + ex.sets, 0);
+      const completedSetsCount = workout.exercises.reduce((sum, ex) => {
+        const done = completedSets[ex.id] ?? [];
+        return sum + done.filter(Boolean).length;
+      }, 0);
       router.replace(
-        `/(app)/entrena/session/done?duration=${elapsedMin}&exercises=${exerciseCount}&kcal=${elapsedMin * KCAL_PER_MIN}`
+        `/(app)/entrena/session/done?duration=${elapsedMin}&exercises=${exerciseCount}&kcal=${elapsedMin * KCAL_PER_MIN}&workoutId=${workoutId}&totalSets=${totalSetsCount}&completedSets=${completedSetsCount}`
       );
     } else {
       setCurrentIdx((i) => i + 1);

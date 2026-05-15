@@ -8,7 +8,9 @@ import {
   Animated,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { apiCall } from '@/lib/api';
 import { colors, spacing, radius, shadows } from '@/design/tokens';
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -72,10 +74,18 @@ function StatCol({
 
 // ── Main Screen ──────────────────────────────────────────────────────
 export default function WorkoutDoneScreen() {
-  const { duration, exercises, kcal } =
-    useLocalSearchParams<{ duration: string; exercises: string; kcal: string }>();
+  const { duration, exercises, kcal, workoutId, totalSets, completedSets } =
+    useLocalSearchParams<{
+      duration: string;
+      exercises: string;
+      kcal: string;
+      workoutId: string;
+      totalSets: string;
+      completedSets: string;
+    }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { getToken } = useAuth();
 
   // ── Animation ─────────────────────────────────────────────────────
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -88,6 +98,29 @@ export default function WorkoutDoneScreen() {
       useNativeDriver: true,
     }).start();
   }, [scaleAnim]);
+
+  // ── Record workout session (silent fail) ───────────────────────────
+  useEffect(() => {
+    async function record() {
+      try {
+        const token = await getToken();
+        if (!token || !workoutId) return;
+        await apiCall(`/api/workouts/${workoutId}/complete`, token, {
+          method: 'POST',
+          body: JSON.stringify({
+            duration_min: Number(duration ?? 0),
+            kcal_estimate: Number(kcal ?? 0),
+            total_sets: Number(totalSets ?? 0),
+            completed_sets: Number(completedSets ?? 0),
+          }),
+        });
+      } catch {
+        // Silent fail — don't block celebration
+      }
+    }
+    record();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workoutId]);
 
   // ── SOCIO message (random on mount) ───────────────────────────────
   const [doneMsg] = useState(

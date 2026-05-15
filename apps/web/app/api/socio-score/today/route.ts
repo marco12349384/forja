@@ -49,8 +49,8 @@ export async function GET() {
     const dbUserId = await ensureUser(userId, email, name);
     const todayISO = new Date().toISOString().split('T')[0];
 
-    // Run 4 independent queries in parallel with Promise.allSettled
-    const [energyResult, nutritionResult, movementResult, waterResult] =
+    // Run 5 independent queries in parallel with Promise.allSettled
+    const [energyResult, nutritionResult, movementResult, waterResult, sessionsTodayResult] =
       await Promise.allSettled([
         // 1. Sleep: today's energy checkin
         sql`
@@ -66,8 +66,7 @@ export async function GET() {
           WHERE user_id = ${dbUserId} AND date = ${todayISO}
           LIMIT 1
         `,
-        // 3. Movement: count completed mini_missions with category='movement' today
-        // TODO: replace with workout_sessions lookup once that table exists
+        // 3. Movement (fallback): completed mini_missions with category='movement' today
         sql`
           SELECT COUNT(*) AS done_count
           FROM mini_missions
@@ -82,6 +81,12 @@ export async function GET() {
           FROM daily_nutrition
           WHERE user_id = ${dbUserId} AND date = ${todayISO}
           LIMIT 1
+        `,
+        // 5. Movement (primary): check if a workout_session exists for today
+        sql`
+          SELECT count(*)::int AS c
+          FROM workout_sessions
+          WHERE user_id = ${dbUserId} AND date = ${todayISO}
         `,
       ]);
 
@@ -116,14 +121,33 @@ export async function GET() {
     }
 
     // ── Movement (25 pts) ───────────────────────────────────────────
-    // TODO: When workout_sessions table exists, check if user completed a workout today.
-    // For now, award points if user has completed any movement mini_mission today.
+    // Primary: check if a workout_session exists for today → 25 pts
+    // Fallback: completed movement mini_missions → up to 15 pts
     let movementPts = 0;
-    if (movementResult.status === 'fulfilled' && movementResult.value.length > 0) {
-      const doneCount = Number(movementResult.value[0].done_count ?? 0);
-      if (doneCount > 0) movementPts = 25;
-    } else if (movementResult.status === 'rejected') {
-      console.error('socio-score/today: movement query failed', movementResult.reason);
+    if (sessionsTodayResult.status === 'fulfilled' && sessionsTodayResult.value.length > 0) {
+      const hasSession = (Number(sessionsTodayResult.value[0].c ?? 0)) > 0;
+      if (hasSession) {
+        movementPts = 25;
+      } else {
+        // Fallback to movement mini_missions (capped at 15)
+        if (movementResult.status === 'fulfilled' && movementResult.value.length > 0) {
+          const doneCount = Number(movementResult.value[0].done_count ?? 0);
+          if (doneCount > 0) movementPts = Math.min(15, doneCount * 15);
+        } else if (movementResult.status === 'rejected') {
+          console.error('socio-score/today: movement mini_missions query failed', movementResult.reason);
+        }
+      }
+    } else {
+      // sessions query failed or no results — fall back to mini_missions
+      if (sessionsTodayResult.status === 'rejected') {
+        console.error('socio-score/today: workout_sessions query failed', sessionsTodayResult.reason);
+      }
+      if (movementResult.status === 'fulfilled' && movementResult.value.length > 0) {
+        const doneCount = Number(movementResult.value[0].done_count ?? 0);
+        if (doneCount > 0) movementPts = Math.min(15, doneCount * 15);
+      } else if (movementResult.status === 'rejected') {
+        console.error('socio-score/today: movement mini_missions query failed', movementResult.reason);
+      }
     }
 
     // ── Hydration (25 pts) ──────────────────────────────────────────
