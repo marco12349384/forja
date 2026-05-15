@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     if (typeof body?.description !== 'string' || body.description.trim().length === 0) {
       return NextResponse.json({ error: 'description es requerida' }, { status: 400 });
     }
-    if (typeof body?.kcal !== 'number' || body.kcal < 0) {
+    if (typeof body?.kcal !== 'number' || !isFinite(body.kcal) || body.kcal < 0) {
       return NextResponse.json({ error: 'kcal debe ser un número >= 0' }, { status: 400 });
     }
 
@@ -75,6 +75,10 @@ export async function POST(req: Request) {
         updated_at = now()
     `;
 
+    if (!inserted?.[0]) {
+      console.error('nutrition/log: INSERT returned no row');
+      return NextResponse.json({ error: 'No se pudo registrar la comida. Intenta de nuevo.' }, { status: 500 });
+    }
     const row = inserted[0];
     return NextResponse.json({
       id: row.id,

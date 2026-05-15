@@ -488,8 +488,12 @@ export default function NutricionScreen() {
       const token = await getToken();
       if (!token) throw new Error('Sin sesión');
       const result = await apiCall('/api/nutrition/today', token);
-      setData(result);
-      setError(null);
+      if (result?.macros && result?.meals) {
+        setData(result);
+        setError(null);
+      } else {
+        setError('Datos incorrectos del servidor');
+      }
     } catch (err: any) {
       setError('No se pudieron cargar los datos. Intenta de nuevo.');
     } finally {

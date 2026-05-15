@@ -36,9 +36,9 @@ export async function POST(req: Request) {
 
     const result = await sql`
       INSERT INTO daily_nutrition (user_id, date, water_glasses, kcal_goal, protein_goal)
-      VALUES (${dbUserId}, ${todayISO}, GREATEST(0, ${delta}::int), 2200, 150)
+      VALUES (${dbUserId}, ${todayISO}, LEAST(20, GREATEST(0, ${delta}::int)), 2200, 150)
       ON CONFLICT (user_id, date) DO UPDATE SET
-        water_glasses = GREATEST(0, daily_nutrition.water_glasses + ${delta}::int),
+        water_glasses = LEAST(20, GREATEST(0, daily_nutrition.water_glasses + ${delta}::int)),
         updated_at = now()
       RETURNING water_glasses
     `;
