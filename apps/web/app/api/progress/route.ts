@@ -187,6 +187,9 @@ export async function GET() {
         (streakDatesResult.value as Array<Record<string, unknown>>).map((r) => String(r.date))
       );
       let cursor = new Date(now);
+      if (!activeDates.has(todayISO)) {
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
+      }
       while (true) {
         const dateStr = cursor.toISOString().split('T')[0];
         if (!activeDates.has(dateStr)) break;

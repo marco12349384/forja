@@ -79,6 +79,10 @@ export async function POST(
                 total_sets, completed_sets, intensity, created_at
     `;
 
+    if (!rows[0]) {
+      console.error('workouts/complete: INSERT returned no row');
+      return NextResponse.json({ error: 'No se pudo guardar la sesión. Intenta de nuevo.' }, { status: 500 });
+    }
     return NextResponse.json(rows[0]);
   } catch (err) {
     console.error('workouts/complete:fatal', err);

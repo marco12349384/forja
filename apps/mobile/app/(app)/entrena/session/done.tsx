@@ -104,7 +104,11 @@ export default function WorkoutDoneScreen() {
     async function record() {
       try {
         const token = await getToken();
-        if (!token || !workoutId) return;
+        if (!token) return;
+        if (!workoutId) {
+          console.warn('done.tsx: no workoutId — skipping session record');
+          return;
+        }
         await apiCall(`/api/workouts/${workoutId}/complete`, token, {
           method: 'POST',
           body: JSON.stringify({
