@@ -12,6 +12,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useAuth } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
 import { colors, spacing, radius, shadows } from '@/design/tokens';
 import { apiCall } from '@/lib/api';
 
@@ -402,9 +403,11 @@ function MealCard({ title, icon, mealType, items, onRegister }: MealCardProps) {
 
 // ── Snap & Eat Button ─────────────────────────────────────────────
 function SnapEatButton() {
+  const router = useRouter();
   return (
     <TouchableOpacity
       activeOpacity={0.85}
+      onPress={() => router.push('/(app)/snap-eat')}
       style={[
         {
           backgroundColor: colors.calm,
