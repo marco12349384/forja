@@ -111,6 +111,12 @@ Si no puedes identificar la comida con razonable confianza, devuelve confidence_
       RETURNING *
     `;
 
+    // Guard FIRST — bail before touching aggregate
+    if (!inserted?.[0]) {
+      console.error('snap-eat: food_logs INSERT returned no row');
+      return NextResponse.json({ error: 'No se pudo registrar la comida.' }, { status: 500 });
+    }
+
     await sql`
       INSERT INTO daily_nutrition (user_id, date, kcal_consumed, protein_g, carbs_g, fat_g, kcal_goal, protein_goal)
       VALUES (${dbUserId}, ${todayISO}, ${kcal}, ${proteinG}, ${carbsG}, ${fatG}, 2200, 150)
@@ -121,10 +127,6 @@ Si no puedes identificar la comida con razonable confianza, devuelve confidence_
         fat_g = daily_nutrition.fat_g + EXCLUDED.fat_g,
         updated_at = now()
     `;
-
-    if (!inserted?.[0]) {
-      return NextResponse.json({ error: 'No se pudo registrar la comida.' }, { status: 500 });
-    }
 
     return NextResponse.json({
       preview: false,

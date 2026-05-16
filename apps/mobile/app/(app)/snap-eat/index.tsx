@@ -205,6 +205,15 @@ export default function SnapEatScreen() {
         }),
       });
 
+      setSnapResult({
+        ...snapResult!,
+        description: editDescription.trim(),
+        kcal: kcalNum,
+        protein_g: editProtein !== '' ? parseFloat(editProtein) : 0,
+        carbs_g: editCarbs !== '' ? parseFloat(editCarbs) : 0,
+        fat_g: editFat !== '' ? parseFloat(editFat) : 0,
+        preview: false,
+      });
       setState('done');
       setTimeout(() => router.back(), 1500);
     } catch {
