@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiCall } from '@/lib/api';
 import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { PressableScale } from '@/components/PressableScale';
 
 // ── Types ────────────────────────────────────────────────────────────
 interface ExerciseCatalog {
@@ -136,10 +138,26 @@ const SetRow = React.memo(function SetRow({
   done: boolean;
   onToggle: () => void;
 }) {
+  const checkScale = useRef(new Animated.Value(done ? 1 : 0)).current;
+  const checkOpacity = useRef(new Animated.Value(done ? 1 : 0)).current;
+
+  useEffect(() => {
+    if (done) {
+      const anim = Animated.parallel([
+        Animated.spring(checkScale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
+        Animated.timing(checkOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
+      ]);
+      anim.start();
+      return () => anim.stop();
+    } else {
+      checkScale.setValue(0);
+      checkOpacity.setValue(0);
+    }
+  }, [done, checkScale, checkOpacity]);
+
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={onToggle}
-      activeOpacity={0.7}
       accessibilityLabel={`Serie ${setNumber}, ${done ? 'completada' : 'pendiente'}`}
       accessibilityRole="checkbox"
       style={{
@@ -188,7 +206,7 @@ const SetRow = React.memo(function SetRow({
         </Text>
       </View>
 
-      {/* Check mark */}
+      {/* Check mark with spring animation */}
       <View
         style={{
           width: 28,
@@ -201,11 +219,18 @@ const SetRow = React.memo(function SetRow({
           justifyContent: 'center',
         }}
       >
-        {done && (
-          <Text style={{ fontSize: 13, color: '#FFF' }}>✓</Text>
-        )}
+        <Animated.Text
+          style={{
+            fontSize: 13,
+            color: '#FFF',
+            opacity: checkOpacity,
+            transform: [{ scale: checkScale }],
+          }}
+        >
+          ✓
+        </Animated.Text>
       </View>
-    </TouchableOpacity>
+    </PressableScale>
   );
 });
 
@@ -216,6 +241,22 @@ function RestTimer({
   timeLeft: number;
   onSkip: () => void;
 }) {
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const prevTime = useRef(timeLeft);
+
+  useEffect(() => {
+    if (prevTime.current !== timeLeft) {
+      prevTime.current = timeLeft;
+      // Pulse every second: scale 1 → 1.08 → 1
+      const anim = Animated.sequence([
+        Animated.timing(pulseScale, { toValue: 1.08, duration: 120, useNativeDriver: true }),
+        Animated.spring(pulseScale, { toValue: 1, friction: 6, tension: 80, useNativeDriver: true }),
+      ]);
+      anim.start();
+      return () => anim.stop();
+    }
+  }, [timeLeft, pulseScale]);
+
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
   const display = mins > 0
@@ -234,16 +275,17 @@ function RestTimer({
         marginBottom: spacing.md,
       }}
     >
-      <Text
+      <Animated.Text
         style={{
           fontFamily: 'SpaceMono_400Regular',
           fontSize: 56,
           color: colors.primary,
           lineHeight: 64,
+          transform: [{ scale: pulseScale }],
         }}
       >
         {display}
-      </Text>
+      </Animated.Text>
       <Text
         style={{
           fontFamily: 'DMSans_400Regular',
@@ -683,9 +725,8 @@ export default function WorkoutPlayerScreen() {
         </TouchableOpacity>
 
         {/* Next / Finish button */}
-        <TouchableOpacity
+        <PressableScale
           onPress={goNext}
-          activeOpacity={0.8}
           accessibilityLabel={isLast ? 'Terminar entrenamiento' : 'Siguiente ejercicio'}
           style={[
             {
@@ -709,7 +750,7 @@ export default function WorkoutPlayerScreen() {
           >
             {isLast ? 'Terminar 🎉' : 'Siguiente →'}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </View>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import { useRouter } from 'expo-router';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { apiCall } from '@/lib/api';
 import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { PressableScale } from '@/components/PressableScale';
+import { FadeInView } from '@/components/FadeInView';
+import { BreathingPulse } from '@/components/BreathingPulse';
 
 // ── Types ────────────────────────────────────────────────────────
 type EnergyLevel = 1 | 2 | 3;
@@ -74,10 +77,10 @@ function CheckInEnergia({
         {options.map((opt) => {
           const active = value === opt.level;
           return (
-            <TouchableOpacity
+            <PressableScale
               key={opt.level}
               onPress={() => onChange(opt.level)}
-              activeOpacity={0.7}
+              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
               style={{
                 flex: 1,
                 alignItems: 'center',
@@ -87,9 +90,10 @@ function CheckInEnergia({
                 borderColor: active ? opt.color : colors.border,
                 backgroundColor: active ? `${opt.color}15` : colors.card,
               }}
-              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
             >
-              <Text style={{ fontSize: 24, marginBottom: 4 }}>{opt.icon}</Text>
+              <BreathingPulse active={active}>
+                <Text style={{ fontSize: 24, marginBottom: 4 }}>{opt.icon}</Text>
+              </BreathingPulse>
               <Text
                 style={{
                   fontSize: 12,
@@ -99,7 +103,7 @@ function CheckInEnergia({
               >
                 {opt.label}
               </Text>
-            </TouchableOpacity>
+            </PressableScale>
           );
         })}
       </View>
@@ -109,6 +113,19 @@ function CheckInEnergia({
 
 // ── SOCIO Score ──────────────────────────────────────────────────
 function SOCIOScoreCard({ score }: { score: number }) {
+  const scoreAnim = useRef(new Animated.Value(0)).current;
+  const [displayScore, setDisplayScore] = useState(0);
+
+  useEffect(() => {
+    const listener = scoreAnim.addListener(({ value }) => setDisplayScore(Math.round(value)));
+    const anim = Animated.timing(scoreAnim, { toValue: score, duration: 800, useNativeDriver: false });
+    anim.start();
+    return () => {
+      scoreAnim.removeListener(listener);
+      anim.stop();
+    };
+  }, [score, scoreAnim]);
+
   const getScoreColor = () => {
     if (score >= 75) return colors.calm;
     if (score >= 50) return colors.ai;
@@ -161,7 +178,7 @@ function SOCIOScoreCard({ score }: { score: number }) {
             color,
           }}
         >
-          {score}
+          {displayScore}
         </Text>
       </View>
       <View style={{ flex: 1 }}>
@@ -281,10 +298,9 @@ function MiniMisiones({ missions, onToggle }: {
         </View>
       </View>
       {missions.map((m) => (
-        <TouchableOpacity
+        <PressableScale
           key={m.id}
           onPress={() => onToggle(m.id)}
-          activeOpacity={0.7}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -320,7 +336,7 @@ function MiniMisiones({ missions, onToggle }: {
           >
             {m.label}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       ))}
     </View>
   );
@@ -428,9 +444,8 @@ function PlanDiaCard({ workout, onStart }: {
 
       {/* CTA */}
       <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
-        <TouchableOpacity
+        <PressableScale
           onPress={onStart}
-          activeOpacity={0.8}
           style={[
             {
               backgroundColor: accentColor,
@@ -444,7 +459,7 @@ function PlanDiaCard({ workout, onStart }: {
           <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 16, color: '#FFF', letterSpacing: 0.3 }}>
             Iniciar entrenamiento →
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </View>
   );
@@ -824,80 +839,94 @@ export default function HomeScreen() {
       </View>
 
       {/* ── Check-in Energía ── */}
-      <CheckInEnergia value={energy} onChange={setEnergy} />
+      <FadeInView delay={0}>
+        <CheckInEnergia value={energy} onChange={setEnergy} />
+      </FadeInView>
 
       {/* ── SOCIO Message ── */}
-      <SOCIOMessage message={socioMsg} />
+      <FadeInView delay={80}>
+        <SOCIOMessage message={socioMsg} />
+      </FadeInView>
 
       {/* ── SOCIO Score ── */}
-      <SOCIOScoreCard score={score} />
-      {scoreExplanation ? (
-        <Text
-          style={{
-            fontFamily: 'DMSans_400Regular',
-            fontSize: 13,
-            color: colors.muted,
-            marginTop: -spacing.sm,
-            paddingHorizontal: 2,
-            lineHeight: 18,
-          }}
-        >
-          {scoreExplanation}
-        </Text>
-      ) : null}
+      <FadeInView delay={160}>
+        <SOCIOScoreCard score={score} />
+        {scoreExplanation ? (
+          <Text
+            style={{
+              fontFamily: 'DMSans_400Regular',
+              fontSize: 13,
+              color: colors.muted,
+              marginTop: -spacing.sm,
+              paddingHorizontal: 2,
+              lineHeight: 18,
+            }}
+          >
+            {scoreExplanation}
+          </Text>
+        ) : null}
+      </FadeInView>
 
       {/* ── Body Phase ── */}
-      <BodyPhaseCard
-        data={bodyPhase}
-        onPress={() => router.push('/(app)/body-phase')}
-      />
+      <FadeInView delay={240}>
+        <BodyPhaseCard
+          data={bodyPhase}
+          onPress={() => router.push('/(app)/body-phase')}
+        />
+      </FadeInView>
 
       {/* ── Plan del Día ── */}
-      <View>
-        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 20, color: colors.text, marginBottom: spacing.md }}>
-          Tu entrenamiento de hoy
-        </Text>
-        {plan ? (
-          <PlanDiaCard
-            workout={todayWorkout}
-            onStart={() => router.push('/(app)/entrena')}
-          />
-        ) : (
-          <TouchableOpacity
-            onPress={() => router.push('/onboarding')}
-            style={[
-              {
-                backgroundColor: colors.surface,
-                borderRadius: radius.lg,
-                padding: spacing.xl,
-                alignItems: 'center',
-                borderWidth: 1.5,
-                borderColor: `${colors.energy}40`,
-                borderStyle: 'dashed',
-              },
-            ]}
-          >
-            <Text style={{ fontSize: 40, marginBottom: spacing.md }}>⚡</Text>
-            <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 18, color: colors.text, textAlign: 'center' }}>
-              Crea tu plan con SOCIO
-            </Text>
-            <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.muted, marginTop: spacing.xs, textAlign: 'center' }}>
-              Tu plan personalizado en menos de 30 segundos
-            </Text>
-            <View style={{ marginTop: spacing.md, backgroundColor: colors.energy, paddingHorizontal: spacing.lg, paddingVertical: 10, borderRadius: radius.md }}>
-              <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 14, color: '#FFF' }}>
-                Empezar →
+      <FadeInView delay={320}>
+        <View>
+          <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 20, color: colors.text, marginBottom: spacing.md }}>
+            Tu entrenamiento de hoy
+          </Text>
+          {plan ? (
+            <PlanDiaCard
+              workout={todayWorkout}
+              onStart={() => router.push('/(app)/entrena')}
+            />
+          ) : (
+            <PressableScale
+              onPress={() => router.push('/onboarding')}
+              style={[
+                {
+                  backgroundColor: colors.surface,
+                  borderRadius: radius.lg,
+                  padding: spacing.xl,
+                  alignItems: 'center',
+                  borderWidth: 1.5,
+                  borderColor: `${colors.energy}40`,
+                  borderStyle: 'dashed',
+                },
+              ]}
+            >
+              <Text style={{ fontSize: 40, marginBottom: spacing.md }}>⚡</Text>
+              <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 18, color: colors.text, textAlign: 'center' }}>
+                Crea tu plan con SOCIO
               </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      </View>
+              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.muted, marginTop: spacing.xs, textAlign: 'center' }}>
+                Tu plan personalizado en menos de 30 segundos
+              </Text>
+              <View style={{ marginTop: spacing.md, backgroundColor: colors.energy, paddingHorizontal: spacing.lg, paddingVertical: 10, borderRadius: radius.md }}>
+                <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 14, color: '#FFF' }}>
+                  Empezar →
+                </Text>
+              </View>
+            </PressableScale>
+          )}
+        </View>
+      </FadeInView>
 
       {/* ── Quick Log ── */}
-      <QuickLog />
+      <FadeInView delay={400}>
+        <QuickLog />
+      </FadeInView>
 
       {/* ── Mini Misiones ── */}
-      <MiniMisiones missions={missions} onToggle={toggleMission} />
+      <FadeInView delay={480}>
+        <MiniMisiones missions={missions} onToggle={toggleMission} />
+      </FadeInView>
     </ScrollView>
   );
 }

@@ -8,9 +8,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { PressableScale } from '@/components/PressableScale';
+import { FadeInView } from '@/components/FadeInView';
 
 // ── Types ────────────────────────────────────────────────────────
 interface Message {
@@ -22,13 +25,25 @@ interface Message {
 
 // ── Typing indicator ─────────────────────────────────────────────
 function TypingIndicator() {
-  const [dots, setDots] = useState('');
+  const dot1 = useRef(new Animated.Value(1)).current;
+  const dot2 = useRef(new Animated.Value(1)).current;
+  const dot3 = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDots((d) => (d.length >= 3 ? '' : d + '·'));
-    }, 400);
-    return () => clearInterval(interval);
-  }, []);
+    const makePulse = (dot: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(dot, { toValue: 1.4, duration: 300, delay, useNativeDriver: true }),
+          Animated.timing(dot, { toValue: 1.0, duration: 300, useNativeDriver: true }),
+          Animated.delay(600),
+        ])
+      );
+    const a1 = makePulse(dot1, 0);
+    const a2 = makePulse(dot2, 200);
+    const a3 = makePulse(dot3, 400);
+    a1.start(); a2.start(); a3.start();
+    return () => { a1.stop(); a2.stop(); a3.stop(); };
+  }, [dot1, dot2, dot3]);
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, marginBottom: spacing.md }}>
@@ -53,15 +68,27 @@ function TypingIndicator() {
           borderRadius: radius.lg,
           borderBottomLeftRadius: 4,
           paddingHorizontal: spacing.md,
-          paddingVertical: 12,
+          paddingVertical: 16,
           borderWidth: 1,
           borderColor: colors.border,
+          flexDirection: 'row',
+          gap: 6,
+          alignItems: 'center',
           minWidth: 64,
         }}
       >
-        <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 16, color: colors.ai, letterSpacing: 4 }}>
-          {dots || '···'}
-        </Text>
+        {[dot1, dot2, dot3].map((dot, i) => (
+          <Animated.View
+            key={i}
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: colors.ai,
+              transform: [{ scale: dot }],
+            }}
+          />
+        ))}
       </View>
     </View>
   );
@@ -71,6 +98,7 @@ function TypingIndicator() {
 function MessageBubble({ msg }: { msg: Message }) {
   const isUser = msg.role === 'user';
   return (
+    <FadeInView delay={0} offset={8}>
     <View
       style={{
         flexDirection: isUser ? 'row-reverse' : 'row',
@@ -132,6 +160,7 @@ function MessageBubble({ msg }: { msg: Message }) {
         </Text>
       </View>
     </View>
+    </FadeInView>
   );
 }
 
@@ -353,10 +382,9 @@ export default function SOCIOScreen() {
             lineHeight: 22,
           }}
         />
-        <TouchableOpacity
+        <PressableScale
           onPress={() => sendMessage(input)}
           disabled={!input.trim() || loading}
-          activeOpacity={0.8}
           style={[
             {
               width: 48,
@@ -374,7 +402,7 @@ export default function SOCIOScreen() {
           ) : (
             <Text style={{ fontSize: 18 }}>→</Text>
           )}
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </KeyboardAvoidingView>
   );

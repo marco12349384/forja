@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,17 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { apiCall } from '@/lib/api';
 import { colors, spacing, radius, shadows } from '@/design/tokens';
 import type { OnboardingData, FitnessGoal, FitnessLevel, Equipment } from '@forja/types';
+import { PressableScale } from '@/components/PressableScale';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // ── Extended onboarding data ─────────────────────────────────────
 interface PulsoOnboardingData extends Partial<OnboardingData> {
@@ -170,6 +175,8 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const prevStep = useRef(step);
 
   const [data, setData] = useState<PulsoOnboardingData>({
     equipment: [],
@@ -178,6 +185,17 @@ export default function OnboardingScreen() {
     sessionDurationMin: 45,
     allergies: [],
   });
+
+  // Animate step transitions
+  useEffect(() => {
+    const direction = step > prevStep.current ? 1 : -1;
+    prevStep.current = step;
+    // Slide in from direction
+    slideAnim.setValue(direction * SCREEN_WIDTH * 0.3);
+    const anim = Animated.spring(slideAnim, { toValue: 0, friction: 10, tension: 80, useNativeDriver: true });
+    anim.start();
+    return () => anim.stop();
+  }, [step, slideAnim]);
 
   // ── Helpers ────────────────────────────────────────────────────
   function toggle<T>(field: keyof PulsoOnboardingData, value: T) {
@@ -770,8 +788,8 @@ export default function OnboardingScreen() {
         )}
       </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
+      <Animated.ScrollView
+        style={{ flex: 1, transform: [{ translateX: slideAnim }] }}
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
           paddingBottom: 100,
@@ -781,7 +799,7 @@ export default function OnboardingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {renderStep()}
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Navigation buttons */}
       <View
@@ -797,7 +815,7 @@ export default function OnboardingScreen() {
         }}
       >
         {step > 1 && (
-          <TouchableOpacity
+          <PressableScale
             onPress={() => setStep((s) => s - 1)}
             style={{
               flex: 1,
@@ -811,11 +829,11 @@ export default function OnboardingScreen() {
             <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 16, color: colors.muted }}>
               Atrás
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         )}
 
         {step < TOTAL_STEPS ? (
-          <TouchableOpacity
+          <PressableScale
             onPress={() => setStep((s) => s + 1)}
             disabled={!canContinue}
             style={[
@@ -832,9 +850,9 @@ export default function OnboardingScreen() {
             <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 16, color: '#FFF' }}>
               Continuar
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         ) : (
-          <TouchableOpacity
+          <PressableScale
             onPress={handleFinish}
             disabled={loading}
             style={[
@@ -851,7 +869,7 @@ export default function OnboardingScreen() {
             <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 16, color: '#FFF' }}>
               {loading ? 'Creando plan...' : 'Crear mi plan con SOCIO ✨'}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         )}
       </View>
     </KeyboardAvoidingView>

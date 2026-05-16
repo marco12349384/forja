@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Animated,
 } from 'react-native';
 import { useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { colors, spacing, radius, shadows } from '@/design/tokens';
 import { apiCall } from '@/lib/api';
+import { PressableScale } from '@/components/PressableScale';
+import { FadeInView } from '@/components/FadeInView';
 
 // ── Types ─────────────────────────────────────────────────────────
 type MealType = 'desayuno' | 'almuerzo' | 'cena' | 'snack';
@@ -134,6 +137,28 @@ const LogFoodModal = memo(function LogFoodModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const slideY = useRef(new Animated.Value(300)).current;
+
+  // Animate in/out
+  useEffect(() => {
+    if (visible) {
+      const anim = Animated.parallel([
+        Animated.timing(backdropOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.spring(slideY, { toValue: 0, friction: 10, tension: 80, useNativeDriver: true }),
+      ]);
+      anim.start();
+      return () => anim.stop();
+    } else {
+      const anim = Animated.parallel([
+        Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.timing(slideY, { toValue: 300, duration: 200, useNativeDriver: true }),
+      ]);
+      anim.start();
+      return () => anim.stop();
+    }
+  }, [visible, backdropOpacity, slideY]);
+
   // Reset when modal opens
   useEffect(() => {
     if (visible) {
@@ -184,19 +209,22 @@ const LogFoodModal = memo(function LogFoodModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="none" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }} onPress={onClose} />
-        <View
+        <Animated.View style={{ flex: 1, opacity: backdropOpacity }}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }} onPress={onClose} />
+        </Animated.View>
+        <Animated.View
           style={{
             backgroundColor: colors.surface,
             borderTopLeftRadius: radius.lg,
             borderTopRightRadius: radius.lg,
             padding: spacing.lg,
             gap: spacing.md,
+            transform: [{ translateY: slideY }],
           }}
         >
           <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 20, color: colors.text }}>
@@ -319,10 +347,9 @@ const LogFoodModal = memo(function LogFoodModal({
           )}
 
           {/* Submit */}
-          <TouchableOpacity
+          <PressableScale
             onPress={handleSubmit}
             disabled={submitting}
-            activeOpacity={0.8}
             style={{
               backgroundColor: submitting ? `${colors.calm}70` : colors.calm,
               borderRadius: radius.md,
@@ -337,8 +364,8 @@ const LogFoodModal = memo(function LogFoodModal({
                 Guardar comida
               </Text>
             )}
-          </TouchableOpacity>
-        </View>
+          </PressableScale>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -405,8 +432,7 @@ function MealCard({ title, icon, mealType, items, onRegister }: MealCardProps) {
 function SnapEatButton() {
   const router = useRouter();
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
+    <PressableScale
       onPress={() => router.push('/(app)/snap-eat')}
       style={[
         {
@@ -430,7 +456,7 @@ function SnapEatButton() {
         </Text>
       </View>
       <Text style={{ fontSize: 20, color: '#FFF' }}>→</Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 
@@ -577,48 +603,55 @@ export default function NutricionScreen() {
             )}
 
             {/* Calorie overview */}
-            <View style={[{ backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, borderWidth: 1, borderColor: colors.border }, shadows.card]}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: spacing.md }}>
-                <View>
-                  <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.muted }}>Calorías hoy</Text>
-                  <Text style={{ fontFamily: 'SpaceMono_400Regular', fontSize: 32, color: colors.text }}>
-                    {macros.kcal}
-                    <Text style={{ fontSize: 16, color: colors.muted }}> / {macros.kcalGoal}</Text>
+            <FadeInView delay={0}>
+              <View style={[{ backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, borderWidth: 1, borderColor: colors.border }, shadows.card]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: spacing.md }}>
+                  <View>
+                    <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.muted }}>Calorías hoy</Text>
+                    <Text style={{ fontFamily: 'SpaceMono_400Regular', fontSize: 32, color: colors.text }}>
+                      {macros.kcal}
+                      <Text style={{ fontSize: 16, color: colors.muted }}> / {macros.kcalGoal}</Text>
+                    </Text>
+                  </View>
+                  <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: remaining >= 0 ? colors.calm : colors.energy }}>
+                    {remaining >= 0 ? `${remaining} restantes` : `${Math.abs(remaining)} excedido`}
                   </Text>
                 </View>
-                <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: remaining >= 0 ? colors.calm : colors.energy }}>
-                  {remaining >= 0 ? `${remaining} restantes` : `${Math.abs(remaining)} excedido`}
-                </Text>
+                <View style={{ height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: 'hidden', marginBottom: spacing.lg }}>
+                  <View style={{ width: `${Math.min((macros.kcal / macros.kcalGoal) * 100, 100)}%`, height: '100%', backgroundColor: macros.kcal > macros.kcalGoal ? colors.energy : colors.calm, borderRadius: 4 }} />
+                </View>
+                {/* Macros */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                  <MacroRing label="Proteína" current={macros.protein} goal={macros.proteinGoal} color={colors.energy} />
+                  <MacroRing label="Carbos" current={macros.carbs} goal={220} color={colors.ai} />
+                  <MacroRing label="Grasas" current={macros.fat} goal={73} color={colors.calm} />
+                </View>
               </View>
-              <View style={{ height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: 'hidden', marginBottom: spacing.lg }}>
-                <View style={{ width: `${Math.min((macros.kcal / macros.kcalGoal) * 100, 100)}%`, height: '100%', backgroundColor: macros.kcal > macros.kcalGoal ? colors.energy : colors.calm, borderRadius: 4 }} />
-              </View>
-              {/* Macros */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                <MacroRing label="Proteína" current={macros.protein} goal={macros.proteinGoal} color={colors.energy} />
-                <MacroRing label="Carbos" current={macros.carbs} goal={220} color={colors.ai} />
-                <MacroRing label="Grasas" current={macros.fat} goal={73} color={colors.calm} />
-              </View>
-            </View>
+            </FadeInView>
 
             {/* Snap & Eat */}
-            <SnapEatButton />
+            <FadeInView delay={80}>
+              <SnapEatButton />
+            </FadeInView>
 
             {/* Meals */}
             <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 20, color: colors.text }}>Comidas del día</Text>
-            {MEAL_CONFIG.map(({ mealType, title, icon }) => (
-              <MealCard
-                key={mealType}
-                title={title}
-                icon={icon}
-                mealType={mealType}
-                items={meals[mealType] ?? []}
-                onRegister={handleOpenModal}
-              />
+            {MEAL_CONFIG.map(({ mealType, title, icon }, i) => (
+              <FadeInView key={mealType} delay={160 + i * 60}>
+                <MealCard
+                  title={title}
+                  icon={icon}
+                  mealType={mealType}
+                  items={meals[mealType] ?? []}
+                  onRegister={handleOpenModal}
+                />
+              </FadeInView>
             ))}
 
             {/* Water */}
-            <WaterTracker water={macros.water} onDelta={handleWaterDelta} />
+            <FadeInView delay={400}>
+              <WaterTracker water={macros.water} onDelta={handleWaterDelta} />
+            </FadeInView>
           </>
         )}
       </ScrollView>
