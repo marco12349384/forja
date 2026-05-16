@@ -109,11 +109,18 @@ export default function AppLayout() {
           ),
         }}
       />
-      {/* Hidden screen — not shown in tab bar */}
+      {/* Hidden screens — not shown in tab bar */}
       <Tabs.Screen
         name="snap-eat/index"
         options={{
           title: 'Snap & Eat',
+          href: null, // hides from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="body-phase/index"
+        options={{
+          title: 'Fase corporal',
           href: null, // hides from tab bar
         }}
       />

@@ -19,13 +19,17 @@ type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
 type SocioContext = Parameters<typeof buildSOCIOContext>[0];
 
+type GatheredContext = Omit<SocioContext, 'userName'> & {
+  bodyPhase?: { phase: string; recommendation: string; recovery_mode: boolean };
+};
+
 async function gatherSocioContext(
   sql: ReturnType<typeof getDb>,
   dbUserId: string,
   clerkUserId: string,
   todayISO: string,
   todayName: string,
-): Promise<Omit<SocioContext, 'userName'>> {
+): Promise<GatheredContext> {
   let energyLevel: 1 | 2 | 3 | undefined;
   let socioScore: number | undefined;
   let todayWorkout: { name: string; type: string; durationMin: number } | null | undefined;
@@ -37,6 +41,7 @@ async function gatherSocioContext(
   let goal: string | undefined;
   let fitnessLevel: string | undefined;
   let injuries: string[] | undefined;
+  let bodyPhase: { phase: string; recommendation: string; recovery_mode: boolean } | undefined;
 
   try {
     const rows = await sql`
@@ -151,6 +156,68 @@ async function gatherSocioContext(
     console.error('socio/chat: user_profile failed', err);
   }
 
+  // Fetch body phase and compute recovery context
+  try {
+    const [phaseRows, scoreRows] = await Promise.all([
+      sql`
+        SELECT cycle_tracking_enabled, last_period_start, avg_cycle_days, recovery_mode
+        FROM body_phases
+        WHERE user_id = ${dbUserId}
+        LIMIT 1
+      `,
+      sql`
+        SELECT total FROM socio_scores
+        WHERE user_id = ${dbUserId} AND date = ${todayISO}
+        LIMIT 1
+      `,
+    ]);
+
+    const phaseRow = phaseRows[0];
+    const scoreRow = scoreRows[0];
+    const autoRecovery = scoreRow ? Number(scoreRow.total) < 50 : false;
+    const manualRecovery = phaseRow ? Boolean(phaseRow.recovery_mode) : false;
+    const effectiveRecovery = manualRecovery || autoRecovery;
+
+    if (phaseRow && Boolean(phaseRow.cycle_tracking_enabled) && phaseRow.last_period_start) {
+      const lastPeriodStart = new Date(String(phaseRow.last_period_start));
+      const avgDays = Number(phaseRow.avg_cycle_days ?? 28);
+      const today = new Date(todayISO + 'T00:00:00Z');
+      const daysSince = Math.floor(
+        (today.getTime() - lastPeriodStart.getTime()) / 86_400_000,
+      );
+      if (daysSince >= 0) {
+        const dayInCycle = (daysSince % avgDays) + 1;
+        let phase: string;
+        let recommendation: string;
+        if (dayInCycle <= 5) {
+          phase = 'menstruation';
+          recommendation = 'Yoga suave, caminatas y descanso activo. Escucha a tu cuerpo.';
+        } else if (dayInCycle <= 13) {
+          phase = 'follicular';
+          recommendation = 'Fuerza y HIIT — tu energía está alta, aprovéchala.';
+        } else if (dayInCycle <= 16) {
+          phase = 'ovulation';
+          recommendation = 'Peak performance — perfecto para PRs y entrenamientos intensos.';
+        } else {
+          phase = 'luteal';
+          recommendation = 'Pilates, movilidad y entrenamientos moderados. Recuperación activa.';
+        }
+        bodyPhase = { phase, recommendation, recovery_mode: effectiveRecovery };
+      }
+    } else {
+      // Even without cycle tracking, pass recovery info
+      if (effectiveRecovery) {
+        bodyPhase = {
+          phase: 'no monitoreada',
+          recommendation: 'Descanso activo y movilidad — respeta las señales de tu cuerpo.',
+          recovery_mode: true,
+        };
+      }
+    }
+  } catch (err) {
+    console.error('socio/chat: body_phase query failed', err);
+  }
+
   return {
     energyLevel,
     socioScore,
@@ -161,6 +228,7 @@ async function gatherSocioContext(
     goal,
     fitnessLevel,
     injuries,
+    bodyPhase,
   };
 }
 
@@ -238,7 +306,18 @@ export async function POST(req: Request) {
       ...gathered,
     });
 
-    const systemPrompt = `${SOCIO_SYSTEM_PROMPT}\n\n${contextString}`;
+    // Append body phase / recovery context
+    const bodyPhaseLines: string[] = [];
+    if (gathered.bodyPhase) {
+      bodyPhaseLines.push(
+        `Fase corporal actual: ${gathered.bodyPhase.phase}.`,
+        `Recomendación de fase: ${gathered.bodyPhase.recommendation}`,
+        `Modo recuperación: ${gathered.bodyPhase.recovery_mode ? 'ACTIVO — recomienda descanso activo y respeta señales del cuerpo' : 'desactivado'}.`,
+      );
+    }
+    const bodyPhaseContext = bodyPhaseLines.length > 0 ? '\n' + bodyPhaseLines.join('\n') : '';
+
+    const systemPrompt = `${SOCIO_SYSTEM_PROMPT}\n\n${contextString}${bodyPhaseContext}`;
 
     // Build message list for Anthropic
     const messages = [...sanitizedHistory, { role: 'user' as const, content: message }];

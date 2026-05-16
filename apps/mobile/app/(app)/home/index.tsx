@@ -14,6 +14,18 @@ import { colors, spacing, radius, shadows } from '@/design/tokens';
 
 // ── Types ────────────────────────────────────────────────────────
 type EnergyLevel = 1 | 2 | 3;
+
+interface BodyPhaseSummary {
+  tracking_enabled: boolean;
+  recovery_mode: boolean;
+  auto_recovery_today: boolean;
+  current_phase: {
+    phase: string;
+    day_in_cycle: number;
+    recommendation: string;
+  } | null;
+}
+
 interface MiniMission {
   id: string;
   label: string;
@@ -438,6 +450,166 @@ function PlanDiaCard({ workout, onStart }: {
   );
 }
 
+// ── Body Phase Card ───────────────────────────────────────────────
+const PHASE_ICONS: Record<string, string> = {
+  menstruation: '🌙',
+  follicular: '🌱',
+  ovulation: '⚡',
+  luteal: '🌿',
+};
+
+function BodyPhaseCard({
+  data,
+  onPress,
+}: {
+  data: BodyPhaseSummary | null;
+  onPress: () => void;
+}) {
+  // Recovery mode banner
+  if (data?.recovery_mode) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.8}
+        style={[
+          {
+            backgroundColor: `${colors.calm}15`,
+            borderRadius: radius.lg,
+            padding: spacing.lg,
+            borderWidth: 1.5,
+            borderColor: `${colors.calm}40`,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+          },
+          shadows.card,
+        ]}
+      >
+        <Text style={{ fontSize: 24 }}>🌙</Text>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              fontFamily: 'DMSans_700Bold',
+              fontSize: 14,
+              color: colors.calm,
+            }}
+          >
+            Modo recuperación activo
+          </Text>
+          <Text
+            style={{
+              fontFamily: 'DMSans_400Regular',
+              fontSize: 13,
+              color: colors.muted,
+              marginTop: 2,
+              lineHeight: 18,
+            }}
+          >
+            Hoy SOCIO recomienda descanso activo y movilidad.
+          </Text>
+        </View>
+        <Text style={{ fontSize: 14, color: colors.muted }}>→</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  // Phase info card
+  if (data?.tracking_enabled && data.current_phase) {
+    const icon = PHASE_ICONS[data.current_phase.phase] ?? '🔄';
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.8}
+        style={[
+          {
+            backgroundColor: colors.surface,
+            borderRadius: radius.lg,
+            padding: spacing.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+          },
+          shadows.card,
+        ]}
+      >
+        <Text style={{ fontSize: 24 }}>{icon}</Text>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              fontFamily: 'DMSans_700Bold',
+              fontSize: 13,
+              color: colors.text,
+              textTransform: 'capitalize',
+            }}
+          >
+            Fase {data.current_phase.phase} · Día {data.current_phase.day_in_cycle}
+          </Text>
+          <Text
+            style={{
+              fontFamily: 'DMSans_400Regular',
+              fontSize: 12,
+              color: colors.muted,
+              marginTop: 2,
+              lineHeight: 16,
+            }}
+            numberOfLines={2}
+          >
+            {data.current_phase.recommendation}
+          </Text>
+        </View>
+        <Text style={{ fontSize: 14, color: colors.muted }}>→</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  // Default: invite to configure
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={[
+        {
+          backgroundColor: colors.surface,
+          borderRadius: radius.lg,
+          padding: spacing.lg,
+          borderWidth: 1,
+          borderColor: `${colors.ai}25`,
+          borderStyle: 'dashed',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.md,
+        },
+      ]}
+    >
+      <Text style={{ fontSize: 22 }}>🌿</Text>
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontFamily: 'DMSans_700Bold',
+            fontSize: 13,
+            color: colors.text,
+          }}
+        >
+          Configurar fase corporal
+        </Text>
+        <Text
+          style={{
+            fontFamily: 'DMSans_400Regular',
+            fontSize: 12,
+            color: colors.muted,
+            marginTop: 2,
+          }}
+        >
+          SOCIO ajusta tu plan a tu ciclo y bienestar
+        </Text>
+      </View>
+      <Text style={{ fontSize: 14, color: colors.muted }}>→</Text>
+    </TouchableOpacity>
+  );
+}
+
 // ── Quick Log ─────────────────────────────────────────────────────
 function QuickLog() {
   const [water, setWater] = useState(0); // glasses
@@ -518,6 +690,7 @@ export default function HomeScreen() {
   const [missions, setMissions] = useState<MiniMission[]>([]);
   const [score, setScore] = useState<number>(0);
   const [scoreExplanation, setScoreExplanation] = useState<string | null>(null);
+  const [bodyPhase, setBodyPhase] = useState<BodyPhaseSummary | null>(null);
   const [socioMsg] = useState(SOCIO_MESSAGES[new Date().getDay() % SOCIO_MESSAGES.length]);
 
   useEffect(() => {
@@ -526,11 +699,12 @@ export default function HomeScreen() {
         const token = await getToken();
         if (!token) return;
 
-        // Parallelize all 3 initial fetches
-        const [todayResult, missionsResult, scoreResult] = await Promise.allSettled([
+        // Parallelize all 4 initial fetches
+        const [todayResult, missionsResult, scoreResult, bodyPhaseResult] = await Promise.allSettled([
           apiCall('/api/me/today', token),
           apiCall('/api/mini-missions', token),
           apiCall('/api/socio-score/today', token),
+          apiCall('/api/body-phase', token),
         ]);
 
         if (todayResult.status === 'fulfilled') {
@@ -553,6 +727,16 @@ export default function HomeScreen() {
           const s = scoreResult.value;
           if (typeof s.total === 'number') setScore(s.total);
           if (typeof s.explanation === 'string') setScoreExplanation(s.explanation);
+        }
+
+        if (bodyPhaseResult.status === 'fulfilled') {
+          const bp = bodyPhaseResult.value;
+          setBodyPhase({
+            tracking_enabled: Boolean(bp.tracking_enabled),
+            recovery_mode: Boolean(bp.recovery_mode),
+            auto_recovery_today: Boolean(bp.auto_recovery_today),
+            current_phase: bp.current_phase ?? null,
+          });
         }
       } catch {
         // Silently continue — show empty state
@@ -661,6 +845,12 @@ export default function HomeScreen() {
           {scoreExplanation}
         </Text>
       ) : null}
+
+      {/* ── Body Phase ── */}
+      <BodyPhaseCard
+        data={bodyPhase}
+        onPress={() => router.push('/(app)/body-phase')}
+      />
 
       {/* ── Plan del Día ── */}
       <View>
