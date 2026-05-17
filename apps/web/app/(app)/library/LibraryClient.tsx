@@ -53,8 +53,8 @@ export default function LibraryClient({ exercises }: { exercises: Exercise[] }) 
             onClick={() => setActiveTab(tab)}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               activeTab === tab
-                ? 'bg-zinc-800 text-white'
-                : 'text-zinc-400 hover:text-white'
+                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
             {tab}
@@ -64,13 +64,13 @@ export default function LibraryClient({ exercises }: { exercises: Exercise[] }) 
 
       {/* Exercise grid */}
       {filtered.length === 0 ? (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
+        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
           {exercises.length === 0 ? (
-            <p className="text-zinc-400 text-sm">
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm">
               La biblioteca se llena con tu plan. Genera un plan desde la app.
             </p>
           ) : (
-            <p className="text-zinc-400 text-sm">
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm">
               No hay ejercicios en esta categoría.
             </p>
           )}
@@ -80,7 +80,7 @@ export default function LibraryClient({ exercises }: { exercises: Exercise[] }) 
           {filtered.map((ex) => (
             <div
               key={ex.id}
-              className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4"
+              className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4"
             >
               {/* Type chip */}
               <span
@@ -90,7 +90,7 @@ export default function LibraryClient({ exercises }: { exercises: Exercise[] }) 
               </span>
 
               {/* Name */}
-              <p className="font-semibold text-sm mt-2 mb-1 leading-snug">{ex.name}</p>
+              <p className="font-semibold text-sm mt-2 mb-1 leading-snug text-zinc-900 dark:text-white">{ex.name}</p>
 
               {/* Muscles */}
               {(ex.muscles_primary?.length ?? 0) > 0 && (
@@ -106,7 +106,7 @@ export default function LibraryClient({ exercises }: { exercises: Exercise[] }) 
 
               {/* Equipment */}
               {(ex.equipment_needed?.length ?? 0) > 0 && (
-                <p className="text-zinc-600 text-xs mt-1">
+                <p className="text-zinc-500 dark:text-zinc-600 text-xs mt-1">
                   {(ex.equipment_needed ?? []).filter(Boolean).length === 0
                     ? 'Sin equipo'
                     : (ex.equipment_needed ?? []).join(', ')}

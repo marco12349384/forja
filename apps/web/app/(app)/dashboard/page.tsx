@@ -171,24 +171,24 @@ export default async function DashboardPage() {
   const totalGlasses = 8;
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white dark:bg-black">
       <div className="max-w-4xl mx-auto px-4 py-10">
 
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
             {getGreeting()}, {userName}
           </h1>
-          <p className="text-zinc-400 text-sm mt-1">{formatDateES(today)}</p>
+          <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">{formatDateES(today)}</p>
         </div>
 
         {/* SOCIO Score Card */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
+        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 mb-6">
           <div className="text-center mb-6">
             <div className="text-6xl font-bold text-violet-400">
               {socioScore ? socioScore.total : '—'}
             </div>
-            <p className="text-zinc-400 text-sm mt-1">SOCIO Score</p>
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">SOCIO Score</p>
           </div>
 
           {/* 4-column breakdown */}
@@ -201,8 +201,8 @@ export default async function DashboardPage() {
             ].map((item) => (
               <div key={item.label} className="text-center">
                 <div className="text-xl mb-1">{item.emoji}</div>
-                <div className="text-xs text-zinc-400 mb-0.5">{item.label}</div>
-                <div className="text-sm font-semibold">
+                <div className="text-xs text-zinc-600 dark:text-zinc-400 mb-0.5">{item.label}</div>
+                <div className="text-sm font-semibold text-zinc-900 dark:text-white">
                   {item.pts !== null ? `${item.pts}/${item.max}` : '—'}
                 </div>
               </div>
@@ -210,7 +210,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Narrative */}
-          <p className="text-zinc-300 text-sm italic text-center">
+          <p className="text-zinc-700 dark:text-zinc-300 text-sm italic text-center">
             {socioScore?.narrative
               ? socioScore.narrative
               : 'Completa tu check-in del día para ver tu score.'}
@@ -221,8 +221,8 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
           {/* Left — Esta semana (energy dots) */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-            <h2 className="font-semibold text-sm text-zinc-400 uppercase tracking-wider mb-4">
+          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
+            <h2 className="font-semibold text-sm text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-4">
               Esta semana · Energía
             </h2>
             {/* Fix 5: title attribute on each dot */}
@@ -263,8 +263,8 @@ export default async function DashboardPage() {
           </div>
 
           {/* Right — Nutrición de hoy */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-            <h2 className="font-semibold text-sm text-zinc-400 uppercase tracking-wider mb-4">
+          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
+            <h2 className="font-semibold text-sm text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-4">
               Nutrición de hoy
             </h2>
 
@@ -273,13 +273,13 @@ export default async function DashboardPage() {
                 {/* Kcal */}
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>Calorías</span>
-                    <span className="text-zinc-400">
+                    <span className="text-zinc-900 dark:text-white">Calorías</span>
+                    <span className="text-zinc-600 dark:text-zinc-400">
                       {nutrition.kcal_consumed} / {nutrition.kcal_goal} kcal
                     </span>
                   </div>
                   {/* Fix 4: aria attributes on progress bar fill */}
-                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-orange-500 rounded-full transition-all"
                       style={{ width: `${kcalPct}%` }}
@@ -295,13 +295,13 @@ export default async function DashboardPage() {
                 {/* Protein */}
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>Proteína</span>
-                    <span className="text-zinc-400">
+                    <span className="text-zinc-900 dark:text-white">Proteína</span>
+                    <span className="text-zinc-600 dark:text-zinc-400">
                       {nutrition.protein_g}g / {nutrition.protein_goal}g
                     </span>
                   </div>
                   {/* Fix 4: aria attributes on progress bar fill */}
-                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-teal-500 rounded-full transition-all"
                       style={{ width: `${proteinPct}%` }}
@@ -316,7 +316,7 @@ export default async function DashboardPage() {
 
                 {/* Water */}
                 <div>
-                  <p className="text-sm mb-1.5">Agua</p>
+                  <p className="text-sm mb-1.5 text-zinc-900 dark:text-white">Agua</p>
                   <div className="flex gap-1 flex-wrap">
                     {Array.from({ length: totalGlasses }).map((_, i) => (
                       <span
@@ -340,10 +340,10 @@ export default async function DashboardPage() {
         {/* Active plan banner */}
         {/* Fix 6: Remove false affordance from "Ver en app →" */}
         {plan && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
+          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
             <div>
-              <p className="text-zinc-400 text-xs uppercase tracking-wider mb-0.5">Plan activo</p>
-              <p className="font-semibold">{plan.name}</p>
+              <p className="text-zinc-600 dark:text-zinc-400 text-xs uppercase tracking-wider mb-0.5">Plan activo</p>
+              <p className="font-semibold text-zinc-900 dark:text-white">{plan.name}</p>
               <span className="text-violet-400 text-xs mt-1 inline-block">
                 Generado por SOCIO AI
               </span>

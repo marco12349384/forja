@@ -108,18 +108,18 @@ export default async function ProgressPage() {
   const KCAL_MAX = 3000;
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white dark:bg-black">
       <div className="max-w-4xl mx-auto px-4 py-10">
 
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Tu Progreso</h1>
-          <p className="text-zinc-400 text-sm mt-1">Últimos 30 días</p>
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Tu Progreso</h1>
+          <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">Últimos 30 días</p>
         </div>
 
         {/* SOCIO Score History — bar chart */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
-          <h2 className="font-semibold mb-4">SOCIO Score · 30 días</h2>
+        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-6">
+          <h2 className="font-semibold mb-4 text-zinc-900 dark:text-white">SOCIO Score · 30 días</h2>
           <div className="flex items-end gap-0.5 h-32">
             {last30Dates.map((dateStr) => {
               const score = scoreMap.get(dateStr);
@@ -127,7 +127,7 @@ export default async function ProgressPage() {
                 return (
                   <div
                     key={dateStr}
-                    className="flex-1 bg-zinc-700 rounded-sm"
+                    className="flex-1 bg-zinc-300 dark:bg-zinc-700 rounded-sm"
                     style={{ height: '4px' }}
                     title={dateStr}
                   />
@@ -139,7 +139,7 @@ export default async function ProgressPage() {
                   ? 'bg-violet-500'
                   : score >= 50
                   ? 'bg-violet-400/50'
-                  : 'bg-zinc-600';
+                  : 'bg-zinc-400 dark:bg-zinc-600';
               return (
                 <div
                   key={dateStr}
@@ -162,8 +162,8 @@ export default async function ProgressPage() {
         </div>
 
         {/* Energía Diaria — dot grid */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
-          <h2 className="font-semibold mb-4">Energía al despertar · 30 días</h2>
+        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-6">
+          <h2 className="font-semibold mb-4 text-zinc-900 dark:text-white">Energía al despertar · 30 días</h2>
           <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
             {last30Dates.map((dateStr) => {
               const level = energyMap.get(dateStr);
@@ -174,7 +174,7 @@ export default async function ProgressPage() {
                   ? 'bg-violet-500'
                   : level === 1
                   ? 'bg-teal-500'
-                  : 'bg-zinc-800';
+                  : 'bg-zinc-300 dark:bg-zinc-800';
               return (
                 <div
                   key={dateStr}
@@ -185,7 +185,7 @@ export default async function ProgressPage() {
             })}
           </div>
           {/* Legend */}
-          <div className="flex items-center gap-4 mt-4 text-xs text-zinc-400">
+          <div className="flex items-center gap-4 mt-4 text-xs text-zinc-600 dark:text-zinc-400">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-orange-500" />
               <span>Con todo</span>
@@ -199,7 +199,7 @@ export default async function ProgressPage() {
               <span>Cansado</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-zinc-700" />
+              <div className="w-3 h-3 rounded-full bg-zinc-400 dark:bg-zinc-700" />
               <span>Sin registro</span>
             </div>
           </div>
@@ -211,8 +211,8 @@ export default async function ProgressPage() {
         </div>
 
         {/* Nutrición Semanal — horizontal bar chart */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-          <h2 className="font-semibold mb-4">Calorías promedio por semana</h2>
+        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
+          <h2 className="font-semibold mb-4 text-zinc-900 dark:text-white">Calorías promedio por semana</h2>
 
           {weeklyNutrition.length === 0 ? (
             <p className="text-zinc-500 text-sm">
@@ -226,9 +226,9 @@ export default async function ProgressPage() {
                 const label = `Semana ${idx + 1}`;
                 return (
                   <div key={week.week_start} className="flex items-center gap-3">
-                    <span className="text-xs text-zinc-400 w-16 shrink-0">{label}</span>
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400 w-16 shrink-0">{label}</span>
                     {/* Fix 4: aria attributes on weekly nutrition progress bar fill */}
-                    <div className="flex-1 bg-zinc-800 rounded-full h-4 overflow-hidden">
+                    <div className="flex-1 bg-zinc-200 dark:bg-zinc-800 rounded-full h-4 overflow-hidden">
                       <div
                         className="h-full bg-orange-500/70 rounded-full"
                         style={{ width: `${widthPct}%` }}
@@ -239,7 +239,7 @@ export default async function ProgressPage() {
                         aria-label={`${label}: calorías promedio`}
                       />
                     </div>
-                    <span className="text-xs text-zinc-400 w-16 text-right shrink-0">
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400 w-16 text-right shrink-0">
                       {kcal} kcal
                     </span>
                   </div>

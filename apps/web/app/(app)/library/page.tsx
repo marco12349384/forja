@@ -21,12 +21,12 @@ export default async function LibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white dark:bg-black">
       <div className="max-w-4xl mx-auto px-4 py-10">
 
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Biblioteca de Ejercicios</h1>
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Biblioteca de Ejercicios</h1>
         </div>
 
         <LibraryClient exercises={exercises} />
