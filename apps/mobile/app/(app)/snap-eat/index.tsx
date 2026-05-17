@@ -15,7 +15,8 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 import { apiCall } from '@/lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -41,8 +42,10 @@ interface SnapResult {
   message?: string;
 }
 
+type ThemeColors = ReturnType<typeof useTheme>['colors'];
+
 // ── Confidence Bar ─────────────────────────────────────────────────
-function ConfidenceBar({ score }: { score: number }) {
+function ConfidenceBar({ score, colors }: { score: number; colors: ThemeColors }) {
   const pct = Math.round(score * 100);
   const color = score >= 0.7 ? colors.calm : score >= 0.3 ? colors.warning : colors.error;
   return (
@@ -73,6 +76,7 @@ function ConfidenceBar({ score }: { score: number }) {
 export default function SnapEatScreen() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const { colors } = useTheme();
 
   const [state, setState] = useState<ScreenState>('idle');
   const [selectedMealType, setSelectedMealType] = useState<MealType>('almuerzo');
@@ -456,7 +460,7 @@ export default function SnapEatScreen() {
                   </Text>
                 </View>
 
-                <ConfidenceBar score={snapResult.confidence_score} />
+                <ConfidenceBar score={snapResult.confidence_score} colors={colors} />
 
                 {snapResult.message && (
                   <View style={{ backgroundColor: `${colors.warning}15`, borderRadius: radius.sm, padding: spacing.sm, marginTop: spacing.sm }}>

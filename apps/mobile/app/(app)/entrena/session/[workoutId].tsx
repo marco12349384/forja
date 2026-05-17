@@ -13,7 +13,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiCall } from '@/lib/api';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 import { PressableScale } from '@/components/PressableScale';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -62,8 +63,10 @@ const SOCIO_TIPS = [
   'Si sientes dolor agudo (no ardor), para. SOCIO prefiere que dures.',
 ];
 
+type ThemeColors = ReturnType<typeof useTheme>['colors'];
+
 // ── Discipline chip helpers ───────────────────────────────────────────
-function getDisciplineColors(type: string): { bg: string; text: string } {
+function getDisciplineColors(type: string, colors: ThemeColors): { bg: string; text: string } {
   const t = type.toLowerCase();
   if (t === 'gym' || t === 'calistenia' || t === 'hiit') {
     return { bg: colors.energyFade, text: colors.energy };
@@ -80,8 +83,8 @@ function capitalize(str: string) {
 
 // ── Sub-components ───────────────────────────────────────────────────
 
-function DisciplineChip({ type }: { type: string }) {
-  const { bg, text } = getDisciplineColors(type);
+function DisciplineChip({ type, colors }: { type: string; colors: ThemeColors }) {
+  const { bg, text } = getDisciplineColors(type, colors);
   return (
     <View
       style={{
@@ -106,7 +109,7 @@ function DisciplineChip({ type }: { type: string }) {
   );
 }
 
-function MuscleTag({ label }: { label: string }) {
+function MuscleTag({ label, colors }: { label: string; colors: ThemeColors }) {
   return (
     <View
       style={{
@@ -133,10 +136,12 @@ const SetRow = React.memo(function SetRow({
   setNumber,
   done,
   onToggle,
+  colors,
 }: {
   setNumber: number;
   done: boolean;
   onToggle: () => void;
+  colors: ThemeColors;
 }) {
   const checkScale = useRef(new Animated.Value(done ? 1 : 0)).current;
   const checkOpacity = useRef(new Animated.Value(done ? 1 : 0)).current;
@@ -237,9 +242,11 @@ const SetRow = React.memo(function SetRow({
 function RestTimer({
   timeLeft,
   onSkip,
+  colors,
 }: {
   timeLeft: number;
   onSkip: () => void;
+  colors: ThemeColors;
 }) {
   const pulseScale = useRef(new Animated.Value(1)).current;
   const prevTime = useRef(timeLeft);
@@ -316,7 +323,7 @@ function RestTimer({
   );
 }
 
-function SOCIOTipCard({ tip }: { tip: string }) {
+function SOCIOTipCard({ tip, colors }: { tip: string; colors: ThemeColors }) {
   return (
     <View
       style={{
@@ -358,6 +365,7 @@ function SOCIOTipCard({ tip }: { tip: string }) {
 
 // ── Main Screen ──────────────────────────────────────────────────────
 export default function WorkoutPlayerScreen() {
+  const { colors } = useTheme();
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
   const router = useRouter();
   const { getToken } = useAuth();
@@ -626,12 +634,12 @@ export default function WorkoutPlayerScreen() {
           </Text>
 
           {/* Discipline chip */}
-          <DisciplineChip type={workout.type} />
+          <DisciplineChip type={workout.type} colors={colors} />
 
           {/* Muscle group tags */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
             {exercise.catalog.muscles_primary.map((m) => (
-              <MuscleTag key={m} label={m} />
+              <MuscleTag key={m} label={m} colors={colors} />
             ))}
           </View>
 
@@ -667,17 +675,18 @@ export default function WorkoutPlayerScreen() {
               onToggle={() =>
                 toggleSet(exercise.id, i, exercise.sets, exercise.rest_seconds)
               }
+              colors={colors}
             />
           ))}
         </View>
 
         {/* ── Rest Timer (conditional) ──────────────────────────────────── */}
         {isResting && (
-          <RestTimer timeLeft={restTimeLeft} onSkip={skipRest} />
+          <RestTimer timeLeft={restTimeLeft} onSkip={skipRest} colors={colors} />
         )}
 
         {/* ── SOCIO Tip ────────────────────────────────────────────────── */}
-        <SOCIOTipCard tip={socioTip} />
+        <SOCIOTipCard tip={socioTip} colors={colors} />
       </ScrollView>
 
       {/* ── Bottom Navigation Bar ────────────────────────────────────── */}

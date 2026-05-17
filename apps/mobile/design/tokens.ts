@@ -3,47 +3,53 @@
  * "Biomorphic Editorial" style
  *
  * Usage:
- *   import { colors, spacing, radius } from '@/design/tokens';
- *   style={{ backgroundColor: colors.bg }}
+ *   import { spacing, radius } from '@/design/tokens';
+ *   import { useTheme } from '@/design/ThemeContext';
+ *   const { colors } = useTheme();
  */
 
-export const colors = {
-  // ── Backgrounds ─────────────────────────────────────
-  bg: '#F7F3EF',         // Warm linen (light mode)
-  bgDark: '#0F0E17',     // Deep midnight (dark mode)
-
-  // ── Primary ──────────────────────────────────────────
+// ── Base / brand colors (same in both themes) ─────────────────────
+const baseColors = {
   primary: '#2D1B69',
+  energy: '#FF6B47',
+  calm: '#6ABEA7',
+  ai: '#A78BFA',
+  success: '#22C55E',
+  // Semantic
+  warning: '#FBBF24',
+  error: '#F87171',
+  // Fade variants (semi-transparent accents, same in both themes)
   primaryLight: '#4C2FAB',
   primaryFade: 'rgba(45,27,105,0.08)',
-
-  // ── Accents ───────────────────────────────────────────
-  energy: '#FF6B47',     // Coral — exercise, CTAs
   energyFade: 'rgba(255,107,71,0.12)',
-  calm: '#6ABEA7',       // Sage teal — nutrition, rest
   calmFade: 'rgba(106,190,167,0.12)',
-  ai: '#A78BFA',         // Lavender — SOCIO / AI
   aiFade: 'rgba(167,139,250,0.12)',
+};
 
-  // ── Surfaces ──────────────────────────────────────────
+export const lightColors = {
+  ...baseColors,
+  bg: '#F7F3EF',
   surface: '#FFFFFF',
-  surfaceDark: '#1C1A2E',
-  card: '#FEFCFA',
-
-  // ── Text ─────────────────────────────────────────────
+  card: '#FAFAF8',
   text: '#1C1917',
   muted: '#78716C',
   subtle: '#A8A29E',
-
-  // ── Borders ───────────────────────────────────────────
   border: '#E7E5E4',
-  borderDark: '#2C2A3E',
-
-  // ── Semantic ─────────────────────────────────────────
-  success: '#4ADE80',
-  warning: '#FBBF24',
-  error: '#F87171',
 } as const;
+
+export const darkColors = {
+  ...baseColors,
+  bg: '#0F0E17',
+  surface: '#1C1A2E',
+  card: '#252338',
+  text: '#F5F3FF',
+  muted: '#C4B8E0',
+  subtle: '#8B7FB8',
+  border: '#3A3458',
+} as const;
+
+// Default export — keeps backward compat for static usages (shadows, tabBar defaults)
+export const colors = lightColors;
 
 export const spacing = {
   xs: 4,
@@ -115,7 +121,7 @@ export const typography = {
   mono: { fontSize: 15, lineHeight: 22 },
 } as const;
 
-// Tab bar config
+// Tab bar config (uses lightColors defaults — ThemeContext overrides at runtime)
 export const tabBar = {
   height: 72,
   paddingBottom: 12,

@@ -3,6 +3,7 @@ import { tokenCache } from '@/lib/tokenCache';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
+import { StatusBar } from 'expo-status-bar';
 import {
   PlayfairDisplay_700Bold,
   PlayfairDisplay_500Medium,
@@ -13,19 +14,20 @@ import {
   DMSans_700Bold,
 } from '@expo-google-fonts/dm-sans';
 import { SpaceMono_400Regular } from '@expo-google-fonts/space-mono';
+import { ThemeProvider, useTheme } from '@/design/ThemeContext';
 import '../global.css';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
 function InitialLayout() {
   const { isLoaded, isSignedIn } = useAuth();
+  const { theme } = useTheme();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
     if (!isLoaded) return;
     const inAuth = segments[0] === '(auth)';
-    const inOnboarding = segments[0] === 'onboarding';
 
     if (!isSignedIn && !inAuth) {
       router.replace('/(auth)/login');
@@ -34,7 +36,12 @@ function InitialLayout() {
     }
   }, [isLoaded, isSignedIn, segments]);
 
-  return <Slot />;
+  return (
+    <>
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+      <Slot />
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -52,7 +59,9 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <InitialLayout />
+      <ThemeProvider>
+        <InitialLayout />
+      </ThemeProvider>
     </ClerkProvider>
   );
 }

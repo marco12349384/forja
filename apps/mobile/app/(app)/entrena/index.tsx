@@ -1,8 +1,20 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 
 // ── Discipline filter ─────────────────────────────────────────────
+// DISC_COLORS uses static brand colors (accent only, not bg/text)
+const DISC_COLORS_BASE: Record<string, string> = {
+  gym: '#FF6B47',
+  calistenia: '#FF6B47',
+  yoga: '#6ABEA7',
+  pilates: '#6ABEA7',
+  hiit: '#FF6B47',
+  movilidad: '#6ABEA7',
+  todos: '#2D1B69',
+};
+
 const DISCIPLINES = [
   { value: 'todos', label: 'Todos', icon: '⚡' },
   { value: 'gym', label: 'Gym', icon: '🏋️' },
@@ -13,15 +25,8 @@ const DISCIPLINES = [
   { value: 'movilidad', label: 'Movilidad', icon: '🔄' },
 ];
 
-const DISC_COLORS: Record<string, string> = {
-  gym: colors.energy,
-  calistenia: colors.energy,
-  yoga: colors.calm,
-  pilates: colors.calm,
-  hiit: colors.energy,
-  movilidad: colors.calm,
-  todos: colors.primary,
-};
+// Keep DISC_COLORS for runtime use (inside component)
+
 
 // ── Mock workouts library ─────────────────────────────────────────
 const WORKOUTS = [
@@ -41,8 +46,8 @@ const LEVEL_LABEL: Record<string, string> = {
   avanzado: 'Avanzado',
 };
 
-function WorkoutCard({ w, onPress }: { w: typeof WORKOUTS[0]; onPress: () => void }) {
-  const accent = DISC_COLORS[w.discipline] ?? colors.energy;
+function WorkoutCard({ w, onPress, colors }: { w: typeof WORKOUTS[0]; onPress: () => void; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const accent = DISC_COLORS_BASE[w.discipline] ?? colors.energy;
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -78,7 +83,18 @@ function WorkoutCard({ w, onPress }: { w: typeof WORKOUTS[0]; onPress: () => voi
 }
 
 export default function EntrenaScreen() {
+  const { colors } = useTheme();
   const [activeDisc, setActiveDisc] = useState('todos');
+
+  const DISC_COLORS: Record<string, string> = {
+    gym: colors.energy,
+    calistenia: colors.energy,
+    yoga: colors.calm,
+    pilates: colors.calm,
+    hiit: colors.energy,
+    movilidad: colors.calm,
+    todos: colors.primary,
+  };
 
   const filtered = activeDisc === 'todos' ? WORKOUTS : WORKOUTS.filter((w) => w.discipline === activeDisc);
   const accent = DISC_COLORS[activeDisc] ?? colors.primary;
@@ -115,7 +131,7 @@ export default function EntrenaScreen() {
       >
         {DISCIPLINES.map((d) => {
           const active = activeDisc === d.value;
-          const dAccent = DISC_COLORS[d.value] ?? colors.primary;
+          const dAccent = DISC_COLORS_BASE[d.value] ?? colors.primary;
           return (
             <TouchableOpacity
               key={d.value}
@@ -152,7 +168,7 @@ export default function EntrenaScreen() {
       {/* Workout cards */}
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
         {filtered.map((w) => (
-          <WorkoutCard key={w.id} w={w} onPress={() => {}} />
+          <WorkoutCard key={w.id} w={w} onPress={() => {}} colors={colors} />
         ))}
       </View>
     </ScrollView>

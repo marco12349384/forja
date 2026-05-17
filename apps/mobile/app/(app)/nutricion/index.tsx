@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import { useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 import { apiCall } from '@/lib/api';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
@@ -61,13 +62,16 @@ const DEFAULT_DATA: NutritionData = {
   meals: { desayuno: [], almuerzo: [], cena: [], snack: [] },
 };
 
+type ThemeColors = ReturnType<typeof useTheme>['colors'];
+
 // ── Macro Ring ────────────────────────────────────────────────────
-function MacroRing({ label, current, goal, color, unit = 'g' }: {
+function MacroRing({ label, current, goal, color, unit = 'g', colors }: {
   label: string;
   current: number;
   goal: number;
   color: string;
   unit?: string;
+  colors: ThemeColors;
 }) {
   const pct = goal > 0 ? Math.min(current / goal, 1) : 0;
   return (
@@ -112,6 +116,7 @@ interface LogFoodModalProps {
   onClose: () => void;
   onSuccess: () => void;
   getToken: () => Promise<string | null>;
+  colors: ThemeColors;
 }
 
 const MEAL_LABELS: Record<MealType, string> = {
@@ -127,6 +132,7 @@ const LogFoodModal = memo(function LogFoodModal({
   onClose,
   onSuccess,
   getToken,
+  colors,
 }: LogFoodModalProps) {
   const [mealType, setMealType] = useState<MealType>(initialMealType);
   const [description, setDescription] = useState('');
@@ -378,9 +384,10 @@ interface MealCardProps {
   mealType: MealType;
   items: FoodLogItem[];
   onRegister: (mealType: MealType) => void;
+  colors: ThemeColors;
 }
 
-function MealCard({ title, icon, mealType, items, onRegister }: MealCardProps) {
+function MealCard({ title, icon, mealType, items, onRegister, colors }: MealCardProps) {
   const totalKcal = items.reduce((sum, item) => sum + item.kcal, 0);
   const logged = items.length > 0;
 
@@ -429,7 +436,7 @@ function MealCard({ title, icon, mealType, items, onRegister }: MealCardProps) {
 }
 
 // ── Snap & Eat Button ─────────────────────────────────────────────
-function SnapEatButton() {
+function SnapEatButton({ colors }: { colors: ThemeColors }) {
   const router = useRouter();
   return (
     <PressableScale
@@ -464,9 +471,10 @@ function SnapEatButton() {
 interface WaterTrackerProps {
   water: number;
   onDelta: (delta: 1 | -1) => void;
+  colors: ThemeColors;
 }
 
-function WaterTracker({ water, onDelta }: WaterTrackerProps) {
+function WaterTracker({ water, onDelta, colors }: WaterTrackerProps) {
   const goal = 8;
   return (
     <View style={[{ backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, borderWidth: 1, borderColor: colors.border }, shadows.card]}>
@@ -506,6 +514,7 @@ const MEAL_CONFIG: { mealType: MealType; title: string; icon: string }[] = [
 // ── Main Nutrition Screen ─────────────────────────────────────────
 export default function NutricionScreen() {
   const { getToken } = useAuth();
+  const { colors } = useTheme();
   const [data, setData] = useState<NutritionData>(DEFAULT_DATA);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -622,16 +631,16 @@ export default function NutricionScreen() {
                 </View>
                 {/* Macros */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                  <MacroRing label="Proteína" current={macros.protein} goal={macros.proteinGoal} color={colors.energy} />
-                  <MacroRing label="Carbos" current={macros.carbs} goal={220} color={colors.ai} />
-                  <MacroRing label="Grasas" current={macros.fat} goal={73} color={colors.calm} />
+                  <MacroRing label="Proteína" current={macros.protein} goal={macros.proteinGoal} color={colors.energy} colors={colors} />
+                  <MacroRing label="Carbos" current={macros.carbs} goal={220} color={colors.ai} colors={colors} />
+                  <MacroRing label="Grasas" current={macros.fat} goal={73} color={colors.calm} colors={colors} />
                 </View>
               </View>
             </FadeInView>
 
             {/* Snap & Eat */}
             <FadeInView delay={80}>
-              <SnapEatButton />
+              <SnapEatButton colors={colors} />
             </FadeInView>
 
             {/* Meals */}
@@ -644,13 +653,14 @@ export default function NutricionScreen() {
                   mealType={mealType}
                   items={meals[mealType] ?? []}
                   onRegister={handleOpenModal}
+                  colors={colors}
                 />
               </FadeInView>
             ))}
 
             {/* Water */}
             <FadeInView delay={400}>
-              <WaterTracker water={macros.water} onDelta={handleWaterDelta} />
+              <WaterTracker water={macros.water} onDelta={handleWaterDelta} colors={colors} />
             </FadeInView>
           </>
         )}
@@ -662,6 +672,7 @@ export default function NutricionScreen() {
         onClose={() => setModalVisible(false)}
         onSuccess={fetchToday}
         getToken={getToken}
+        colors={colors}
       />
     </>
   );

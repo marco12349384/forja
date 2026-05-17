@@ -11,7 +11,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiCall } from '@/lib/api';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 
 // ── Constants ────────────────────────────────────────────────────────
 const DONE_MESSAGES = [
@@ -22,15 +23,19 @@ const DONE_MESSAGES = [
   'Un workout más en el banco. Sigue sumando.',
 ];
 
+type ThemeColors = ReturnType<typeof useTheme>['colors'];
+
 // ── Stat Column ──────────────────────────────────────────────────────
 function StatCol({
   value,
   label,
   suffix,
+  colors,
 }: {
   value: string;
   label: string;
   suffix?: string;
+  colors: ThemeColors;
 }) {
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
@@ -74,6 +79,7 @@ function StatCol({
 
 // ── Main Screen ──────────────────────────────────────────────────────
 export default function WorkoutDoneScreen() {
+  const { colors } = useTheme();
   const { duration, exercises, kcal, workoutId, totalSets, completedSets } =
     useLocalSearchParams<{
       duration: string;
@@ -180,7 +186,7 @@ export default function WorkoutDoneScreen() {
           shadows.card,
         ]}
       >
-        <StatCol value={durationVal} label="Duración" suffix=" min" />
+        <StatCol value={durationVal} label="Duración" suffix=" min" colors={colors} />
 
         {/* Divider */}
         <View
@@ -191,7 +197,7 @@ export default function WorkoutDoneScreen() {
           }}
         />
 
-        <StatCol value={exercisesVal} label="Ejercicios" />
+        <StatCol value={exercisesVal} label="Ejercicios" colors={colors} />
 
         {/* Divider */}
         <View
@@ -202,7 +208,7 @@ export default function WorkoutDoneScreen() {
           }}
         />
 
-        <StatCol value={kcalVal} label="Estimado" suffix=" kcal" />
+        <StatCol value={kcalVal} label="Estimado" suffix=" kcal" colors={colors} />
       </View>
 
       {/* ── SOCIO message card ───────────────────────────────────────── */}

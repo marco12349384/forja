@@ -7,7 +7,8 @@ import {
 } from 'react-native';
 import { useAuth } from '@clerk/clerk-expo';
 import { apiCall } from '@/lib/api';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -45,9 +46,11 @@ interface ProgressData {
 
 const DAYS_SHORT = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
+type ThemeColors = ReturnType<typeof useTheme>['colors'];
+
 // ── Sub-components ────────────────────────────────────────────────────
 
-function HeatCellView({ level }: { level: number }) {
+function HeatCellView({ level, colors }: { level: number; colors: ThemeColors }) {
   const bgMap = [
     `${colors.primary}10`,
     `${colors.calm}40`,
@@ -69,8 +72,10 @@ function HeatCellView({ level }: { level: number }) {
 
 const ScoreHistory = React.memo(function ScoreHistory({
   data,
+  colors,
 }: {
   data: ScoreEntry[];
+  colors: ThemeColors;
 }) {
   if (data.length === 0) {
     return (
@@ -213,8 +218,10 @@ const ScoreHistory = React.memo(function ScoreHistory({
 
 const RetroCard = React.memo(function RetroCard({
   retro,
+  colors,
 }: {
   retro: LatestRetro;
+  colors: ThemeColors;
 }) {
   return (
     <View
@@ -273,6 +280,7 @@ const RetroCard = React.memo(function RetroCard({
 
 export default function ProgresoScreen() {
   const { getToken } = useAuth();
+  const { colors } = useTheme();
   const [data, setData] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -458,10 +466,10 @@ export default function ProgresoScreen() {
       </View>
 
       {/* SOCIO Score history */}
-      <ScoreHistory data={score_history} />
+      <ScoreHistory data={score_history} colors={colors} />
 
       {/* Retrospectiva (only if available) */}
-      {latest_retro ? <RetroCard retro={latest_retro} /> : null}
+      {latest_retro ? <RetroCard retro={latest_retro} colors={colors} /> : null}
 
       {/* Heatmap */}
       {heatmap.length > 0 ? (
@@ -507,7 +515,7 @@ export default function ProgresoScreen() {
           {heatmap.map((week, wi) => (
             <View key={wi} style={{ flexDirection: 'row' }}>
               {week.map((cell, di) => (
-                <HeatCellView key={di} level={cell.level} />
+                <HeatCellView key={di} level={cell.level} colors={colors} />
               ))}
             </View>
           ))}
@@ -529,7 +537,7 @@ export default function ProgresoScreen() {
               Menos
             </Text>
             {[0, 1, 2, 3].map((l) => (
-              <HeatCellView key={l} level={l} />
+              <HeatCellView key={l} level={l} colors={colors} />
             ))}
             <Text
               style={{

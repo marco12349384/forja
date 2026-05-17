@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { View, Text, Platform } from 'react-native';
-import { colors } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 
 // Custom tab bar icon component
 function TabIcon({
@@ -8,11 +8,13 @@ function TabIcon({
   icon,
   focused,
   accentColor,
+  colors,
 }: {
   label: string;
   icon: string;
   focused: boolean;
   accentColor?: string;
+  colors: ReturnType<typeof useTheme>['colors'];
 }) {
   const activeColor = accentColor ?? colors.primary;
   return (
@@ -44,6 +46,8 @@ function TabIcon({
 }
 
 export default function AppLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
@@ -69,7 +73,7 @@ export default function AppLayout() {
         options={{
           title: 'Hoy',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Hoy" icon="🌿" focused={focused} accentColor={colors.primary} />
+            <TabIcon label="Hoy" icon="🌿" focused={focused} accentColor={colors.primary} colors={colors} />
           ),
         }}
       />
@@ -78,7 +82,7 @@ export default function AppLayout() {
         options={{
           title: 'Entrena',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Entrena" icon="⚡" focused={focused} accentColor={colors.energy} />
+            <TabIcon label="Entrena" icon="⚡" focused={focused} accentColor={colors.energy} colors={colors} />
           ),
         }}
       />
@@ -87,7 +91,7 @@ export default function AppLayout() {
         options={{
           title: 'Nutrición',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Nutrición" icon="🥗" focused={focused} accentColor={colors.calm} />
+            <TabIcon label="Nutrición" icon="🥗" focused={focused} accentColor={colors.calm} colors={colors} />
           ),
         }}
       />
@@ -96,7 +100,7 @@ export default function AppLayout() {
         options={{
           title: 'SOCIO',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="SOCIO" icon="💬" focused={focused} accentColor={colors.ai} />
+            <TabIcon label="SOCIO" icon="💬" focused={focused} accentColor={colors.ai} colors={colors} />
           ),
         }}
       />
@@ -105,7 +109,7 @@ export default function AppLayout() {
         options={{
           title: 'Progreso',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Progreso" icon="📈" focused={focused} accentColor={colors.primary} />
+            <TabIcon label="Progreso" icon="📈" focused={focused} accentColor={colors.primary} colors={colors} />
           ),
         }}
       />

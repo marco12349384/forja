@@ -11,7 +11,8 @@ import {
   Animated,
 } from 'react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
 
@@ -23,8 +24,10 @@ interface Message {
   timestamp: Date;
 }
 
+type ThemeColors = ReturnType<typeof useTheme>['colors'];
+
 // ── Typing indicator ─────────────────────────────────────────────
-function TypingIndicator() {
+function TypingIndicator({ colors }: { colors: ThemeColors }) {
   const dot1 = useRef(new Animated.Value(1)).current;
   const dot2 = useRef(new Animated.Value(1)).current;
   const dot3 = useRef(new Animated.Value(1)).current;
@@ -95,7 +98,7 @@ function TypingIndicator() {
 }
 
 // ── Message bubble ───────────────────────────────────────────────
-function MessageBubble({ msg }: { msg: Message }) {
+function MessageBubble({ msg, colors }: { msg: Message; colors: ThemeColors }) {
   const isUser = msg.role === 'user';
   return (
     <FadeInView delay={0} offset={8}>
@@ -184,6 +187,7 @@ function getGreeting(name: string) {
 export default function SOCIOScreen() {
   const { getToken } = useAuth();
   const { user } = useUser();
+  const { colors } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -307,9 +311,9 @@ export default function SOCIOScreen() {
         showsVerticalScrollIndicator={false}
       >
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} msg={msg} />
+          <MessageBubble key={msg.id} msg={msg} colors={colors} />
         ))}
-        {loading && <TypingIndicator />}
+        {loading && <TypingIndicator colors={colors} />}
       </ScrollView>
 
       {/* Quick prompts */}

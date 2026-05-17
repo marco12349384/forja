@@ -12,10 +12,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { PressableScale } from '@/components/PressableScale';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { apiCall } from '@/lib/api';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 
 // ── Types ─────────────────────────────────────────────────────────
 
@@ -37,16 +39,17 @@ interface BodyPhaseData {
   auto_recovery_today: boolean;
 }
 
+type ThemeColors = ReturnType<typeof useTheme>['colors'];
+
 // ── Phase card (memoized) ─────────────────────────────────────────
 
-const PHASE_META: Record<string, { icon: string; label: string; color: string }> = {
-  menstruation: { icon: '🌙', label: 'Menstruación', color: colors.calm },
-  follicular:   { icon: '🌱', label: 'Folicular', color: colors.primary },
-  ovulation:    { icon: '⚡', label: 'Ovulación', color: colors.energy },
-  luteal:       { icon: '🌿', label: 'Lútea', color: colors.ai },
-};
-
-const PhaseCard = memo(function PhaseCard({ phase }: { phase: CurrentPhase }) {
+const PhaseCard = memo(function PhaseCard({ phase, colors }: { phase: CurrentPhase; colors: ThemeColors }) {
+  const PHASE_META: Record<string, { icon: string; label: string; color: string }> = {
+    menstruation: { icon: '🌙', label: 'Menstruación', color: colors.calm },
+    follicular:   { icon: '🌱', label: 'Folicular', color: colors.primary },
+    ovulation:    { icon: '⚡', label: 'Ovulación', color: colors.energy },
+    luteal:       { icon: '🌿', label: 'Lútea', color: colors.ai },
+  };
   const meta = PHASE_META[phase.phase] ?? { icon: '🔄', label: phase.phase, color: colors.primary };
   return (
     <View
@@ -125,10 +128,12 @@ function SegmentedSlider({
   value,
   onChange,
   emojis,
+  colors,
 }: {
   value: number | null;
   onChange: (v: number) => void;
   emojis: string[];
+  colors: ThemeColors;
 }) {
   return (
     <View style={{ flexDirection: 'row', gap: spacing.xs }}>
@@ -175,6 +180,7 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export default function BodyPhaseScreen() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const { colors, mode, setMode } = useTheme();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -475,7 +481,7 @@ export default function BodyPhaseScreen() {
                     >
                       Tu fase actual
                     </Text>
-                    <PhaseCard phase={data.current_phase} />
+                    <PhaseCard phase={data.current_phase} colors={colors} />
                   </View>
                 )}
               </View>
@@ -522,6 +528,7 @@ export default function BodyPhaseScreen() {
                 value={stressLevel}
                 onChange={setStressLevel}
                 emojis={['😌', '😐', '😟', '😰', '🥵']}
+                colors={colors}
               />
             </View>
 
@@ -540,7 +547,67 @@ export default function BodyPhaseScreen() {
                 value={sleepQuality}
                 onChange={setSleepQuality}
                 emojis={['😴', '😪', '🥱', '🙂', '😎']}
+                colors={colors}
               />
+            </View>
+          </View>
+
+          {/* ── Apariencia (theme toggle) ── */}
+          <View
+            style={[
+              {
+                backgroundColor: colors.surface,
+                borderRadius: radius.lg,
+                padding: spacing.lg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                marginTop: spacing.md,
+                gap: spacing.md,
+              },
+              shadows.card,
+            ]}
+          >
+            <Text
+              style={{
+                fontFamily: 'PlayfairDisplay_700Bold',
+                fontSize: 18,
+                color: colors.text,
+              }}
+            >
+              Apariencia
+            </Text>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              {(['light', 'dark', 'system'] as const).map((m) => {
+                const active = mode === m;
+                const label = m === 'light' ? '☀️ Claro' : m === 'dark' ? '🌙 Oscuro' : '⚙️ Sistema';
+                return (
+                  <PressableScale
+                    key={m}
+                    onPress={() => setMode(m)}
+                    style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      paddingVertical: spacing.sm,
+                      paddingHorizontal: spacing.xs,
+                      borderRadius: radius.md,
+                      borderWidth: 1.5,
+                      borderColor: active ? colors.primary : colors.border,
+                      backgroundColor: active ? colors.primary : colors.card,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: active ? 'DMSans_700Bold' : 'DMSans_400Regular',
+                        fontSize: 12,
+                        color: active ? '#FFF' : colors.text,
+                        textAlign: 'center',
+                      }}
+                    >
+                      {label}
+                    </Text>
+                  </PressableScale>
+                );
+              })}
             </View>
           </View>
 

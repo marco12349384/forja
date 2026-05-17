@@ -10,7 +10,8 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { apiCall } from '@/lib/api';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
 import { BreathingPulse } from '@/components/BreathingPulse';
@@ -40,9 +41,11 @@ interface MiniMission {
 function CheckInEnergia({
   value,
   onChange,
+  colors,
 }: {
   value: EnergyLevel | null;
   onChange: (v: EnergyLevel) => void;
+  colors: ReturnType<typeof useTheme>['colors'];
 }) {
   const options: { level: EnergyLevel; icon: string; label: string; color: string }[] = [
     { level: 1, icon: '🌙', label: 'Cansado', color: colors.calm },
@@ -112,7 +115,7 @@ function CheckInEnergia({
 }
 
 // ── SOCIO Score ──────────────────────────────────────────────────
-function SOCIOScoreCard({ score }: { score: number }) {
+function SOCIOScoreCard({ score, colors }: { score: number; colors: ReturnType<typeof useTheme>['colors'] }) {
   const scoreAnim = useRef(new Animated.Value(0)).current;
   const [displayScore, setDisplayScore] = useState(0);
 
@@ -226,11 +229,11 @@ function SOCIOScoreCard({ score }: { score: number }) {
 }
 
 // ── SOCIO Message ─────────────────────────────────────────────────
-function SOCIOMessage({ message }: { message: string }) {
+function SOCIOMessage({ message, colors }: { message: string; colors: ReturnType<typeof useTheme>['colors'] }) {
   return (
     <View
       style={{
-        backgroundColor: colors.aiFade ?? `${colors.ai}12`,
+        backgroundColor: `${colors.ai}12`,
         borderRadius: radius.lg,
         padding: spacing.lg,
         borderLeftWidth: 3,
@@ -269,9 +272,10 @@ function SOCIOMessage({ message }: { message: string }) {
 }
 
 // ── Mini Misiones ─────────────────────────────────────────────────
-function MiniMisiones({ missions, onToggle }: {
+function MiniMisiones({ missions, onToggle, colors }: {
   missions: MiniMission[];
   onToggle: (id: string) => void;
+  colors: ReturnType<typeof useTheme>['colors'];
 }) {
   const done = missions.filter((m) => m.done).length;
   return (
@@ -343,9 +347,10 @@ function MiniMisiones({ missions, onToggle }: {
 }
 
 // ── Plan del Día Card ─────────────────────────────────────────────
-function PlanDiaCard({ workout, onStart }: {
+function PlanDiaCard({ workout, onStart, colors }: {
   workout: any;
   onStart: () => void;
+  colors: ReturnType<typeof useTheme>['colors'];
 }) {
   const TYPE_COLOR: Record<string, string> = {
     gym: colors.energy,
@@ -476,9 +481,11 @@ const PHASE_ICONS: Record<string, string> = {
 function BodyPhaseCard({
   data,
   onPress,
+  colors,
 }: {
   data: BodyPhaseSummary | null;
   onPress: () => void;
+  colors: ReturnType<typeof useTheme>['colors'];
 }) {
   // Recovery mode banner
   if (data?.recovery_mode) {
@@ -626,7 +633,7 @@ function BodyPhaseCard({
 }
 
 // ── Quick Log ─────────────────────────────────────────────────────
-function QuickLog() {
+function QuickLog({ colors }: { colors: ReturnType<typeof useTheme>['colors'] }) {
   const [water, setWater] = useState(0); // glasses
   const [steps, setSteps] = useState(0);
 
@@ -698,6 +705,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { getToken } = useAuth();
   const { user } = useUser();
+  const { colors } = useTheme();
   const [plan, setPlan] = useState<any>(null);
   const [todayWorkout, setTodayWorkout] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -840,17 +848,17 @@ export default function HomeScreen() {
 
       {/* ── Check-in Energía ── */}
       <FadeInView delay={0}>
-        <CheckInEnergia value={energy} onChange={setEnergy} />
+        <CheckInEnergia value={energy} onChange={setEnergy} colors={colors} />
       </FadeInView>
 
       {/* ── SOCIO Message ── */}
       <FadeInView delay={80}>
-        <SOCIOMessage message={socioMsg} />
+        <SOCIOMessage message={socioMsg} colors={colors} />
       </FadeInView>
 
       {/* ── SOCIO Score ── */}
       <FadeInView delay={160}>
-        <SOCIOScoreCard score={score} />
+        <SOCIOScoreCard score={score} colors={colors} />
         {scoreExplanation ? (
           <Text
             style={{
@@ -872,6 +880,7 @@ export default function HomeScreen() {
         <BodyPhaseCard
           data={bodyPhase}
           onPress={() => router.push('/(app)/body-phase')}
+          colors={colors}
         />
       </FadeInView>
 
@@ -885,6 +894,7 @@ export default function HomeScreen() {
             <PlanDiaCard
               workout={todayWorkout}
               onStart={() => router.push('/(app)/entrena')}
+              colors={colors}
             />
           ) : (
             <PressableScale
@@ -920,12 +930,12 @@ export default function HomeScreen() {
 
       {/* ── Quick Log ── */}
       <FadeInView delay={400}>
-        <QuickLog />
+        <QuickLog colors={colors} />
       </FadeInView>
 
       {/* ── Mini Misiones ── */}
       <FadeInView delay={480}>
-        <MiniMisiones missions={missions} onToggle={toggleMission} />
+        <MiniMisiones missions={missions} onToggle={toggleMission} colors={colors} />
       </FadeInView>
     </ScrollView>
   );

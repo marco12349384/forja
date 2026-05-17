@@ -14,7 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { apiCall } from '@/lib/api';
-import { colors, spacing, radius, shadows } from '@/design/tokens';
+import { spacing, radius, shadows } from '@/design/tokens';
+import { useTheme } from '@/design/ThemeContext';
 import type { OnboardingData, FitnessGoal, FitnessLevel, Equipment } from '@forja/types';
 import { PressableScale } from '@/components/PressableScale';
 
@@ -88,6 +89,8 @@ const TRAINING_LOCATIONS = [
 const DAYS_OPTIONS = [1, 2, 3, 4, 5, 6];
 const DURATION_OPTIONS = [20, 45, 60, 90];
 
+type ThemeColors = ReturnType<typeof useTheme>['colors'];
+
 // ── Reusable option button ────────────────────────────────────────
 function OptionBtn({
   active,
@@ -95,8 +98,9 @@ function OptionBtn({
   icon,
   label,
   desc,
-  accentColor = colors.primary,
+  accentColor,
   half = false,
+  colors,
 }: {
   active: boolean;
   onPress: () => void;
@@ -105,7 +109,9 @@ function OptionBtn({
   desc?: string;
   accentColor?: string;
   half?: boolean;
+  colors: ThemeColors;
 }) {
+  const resolvedAccent = accentColor ?? colors.primary;
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -117,8 +123,8 @@ function OptionBtn({
         padding: spacing.md,
         borderRadius: radius.md,
         borderWidth: 1.5,
-        borderColor: active ? accentColor : colors.border,
-        backgroundColor: active ? `${accentColor}12` : colors.surface,
+        borderColor: active ? resolvedAccent : colors.border,
+        backgroundColor: active ? `${resolvedAccent}12` : colors.surface,
         width: half ? '48%' : '100%',
       }}
     >
@@ -128,7 +134,7 @@ function OptionBtn({
           style={{
             fontFamily: active ? 'DMSans_700Bold' : 'DMSans_500Medium',
             fontSize: 14,
-            color: active ? accentColor : colors.text,
+            color: active ? resolvedAccent : colors.text,
             textAlign: half ? 'center' : 'left',
           }}
         >
@@ -141,7 +147,7 @@ function OptionBtn({
         )}
       </View>
       {active && !half && (
-        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: accentColor, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: resolvedAccent, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ fontSize: 11, color: '#FFF' }}>✓</Text>
         </View>
       )}
@@ -150,7 +156,7 @@ function OptionBtn({
 }
 
 // ── Step Header ──────────────────────────────────────────────────
-function StepHeader({ step, title, subtitle }: { step: number; title: string; subtitle?: string }) {
+function StepHeader({ step, title, subtitle, colors }: { step: number; title: string; subtitle?: string; colors: ThemeColors }) {
   return (
     <View style={{ gap: spacing.xs }}>
       <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.ai, letterSpacing: 0.5 }}>
@@ -172,6 +178,7 @@ function StepHeader({ step, title, subtitle }: { step: number; title: string; su
 export default function OnboardingScreen() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const { colors } = useTheme();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -239,7 +246,7 @@ export default function OnboardingScreen() {
       case 1:
         return (
           <>
-            <StepHeader step={1} title="¿Cuál es tu objetivo?" subtitle="Sé honesto contigo. No hay respuesta incorrecta." />
+            <StepHeader step={1} title="¿Cuál es tu objetivo?" subtitle="Sé honesto contigo. No hay respuesta incorrecta." colors={colors} />
             {GOALS.map((g) => (
               <OptionBtn
                 key={g.value}
@@ -249,6 +256,7 @@ export default function OnboardingScreen() {
                 label={g.label}
                 desc={g.desc}
                 accentColor={colors.energy}
+                colors={colors}
               />
             ))}
           </>
@@ -258,7 +266,7 @@ export default function OnboardingScreen() {
       case 2:
         return (
           <>
-            <StepHeader step={2} title="Cuéntame de tu cuerpo" subtitle="Esto permite a SOCIO calcular tus necesidades exactas." />
+            <StepHeader step={2} title="Cuéntame de tu cuerpo" subtitle="Esto permite a SOCIO calcular tus necesidades exactas." colors={colors} />
 
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               {/* Peso */}
@@ -366,7 +374,7 @@ export default function OnboardingScreen() {
       case 3:
         return (
           <>
-            <StepHeader step={3} title="¿Cuál es tu nivel?" subtitle="Sé honesto — así SOCIO no te mata el primer día 😄" />
+            <StepHeader step={3} title="¿Cuál es tu nivel?" subtitle="Sé honesto — así SOCIO no te mata el primer día 😄" colors={colors} />
             {LEVELS.map((l) => (
               <OptionBtn
                 key={l.value}
@@ -376,6 +384,7 @@ export default function OnboardingScreen() {
                 label={l.label}
                 desc={l.desc}
                 accentColor={colors.primary}
+                colors={colors}
               />
             ))}
             <View>
@@ -417,7 +426,7 @@ export default function OnboardingScreen() {
       case 4:
         return (
           <>
-            <StepHeader step={4} title="¿Cuánto tiempo tienes?" subtitle="Sé realista con tu semana, no con la semana ideal." />
+            <StepHeader step={4} title="¿Cuánto tiempo tienes?" subtitle="Sé realista con tu semana, no con la semana ideal." colors={colors} />
 
             <View>
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.text, marginBottom: spacing.sm }}>
@@ -492,7 +501,7 @@ export default function OnboardingScreen() {
       case 5:
         return (
           <>
-            <StepHeader step={5} title="Limitaciones físicas" subtitle="Esto es importante para evitar lesiones. Es opcional." />
+            <StepHeader step={5} title="Limitaciones físicas" subtitle="Esto es importante para evitar lesiones. Es opcional." colors={colors} />
             <View>
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
                 ¿Alguna lesión o zona a evitar?
@@ -531,7 +540,7 @@ export default function OnboardingScreen() {
       case 6:
         return (
           <>
-            <StepHeader step={6} title="¿Dónde y con qué entrenas?" />
+            <StepHeader step={6} title="¿Dónde y con qué entrenas?" colors={colors} />
 
             <View>
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
@@ -605,7 +614,7 @@ export default function OnboardingScreen() {
       case 7:
         return (
           <>
-            <StepHeader step={7} title="Tu alimentación" subtitle="SOCIO te sugerirá comidas que realmente puedas preparar." />
+            <StepHeader step={7} title="Tu alimentación" subtitle="SOCIO te sugerirá comidas que realmente puedas preparar." colors={colors} />
 
             <View>
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
