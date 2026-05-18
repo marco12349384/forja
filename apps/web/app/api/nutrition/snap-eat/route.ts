@@ -7,6 +7,16 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 const MODEL_TIMEOUT_MS = 25_000;
 
+// Detect image media type from base64 magic bytes (raw base64, no data:URI prefix)
+function detectMediaType(base64: string): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' {
+  const head = base64.slice(0, 16);
+  if (head.startsWith('/9j/')) return 'image/jpeg';            // JPEG: FF D8 FF
+  if (head.startsWith('iVBORw0KGgo')) return 'image/png';      // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (head.startsWith('UklGR')) return 'image/webp';           // WEBP: "RIFF...WEBP"
+  if (head.startsWith('R0lGOD')) return 'image/gif';           // GIF: "GIF87a" / "GIF89a"
+  return 'image/jpeg';                                          // sensible default
+}
+
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -57,7 +67,7 @@ Si no puedes identificar la comida con razonable confianza, devuelve confidence_
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+            { type: 'image', source: { type: 'base64', media_type: detectMediaType(imageBase64), data: imageBase64 } },
             { type: 'text', text: prompt },
           ],
         }],
@@ -103,35 +113,37 @@ Si no puedes identificar la comida con razonable confianza, devuelve confidence_
       });
     }
 
-    // Persist to food_logs + update daily_nutrition
+    // Persist to food_logs + update daily_nutrition atomically
+    // If aggregate upsert fails, food_logs INSERT rolls back too — no orphan rows.
     const todayISO = new Date().toISOString().split('T')[0];
-    const inserted = await sql`
-      INSERT INTO food_logs (user_id, date, meal_type, description, kcal, protein_g, carbs_g, fat_g, logged_via, confidence_score)
-      VALUES (${dbUserId}, ${todayISO}, ${mealType}, ${desc}, ${kcal}, ${proteinG}, ${carbsG}, ${fatG}, 'snap_eat', ${confidence})
-      RETURNING *
-    `;
+    const insertedRow: any = await sql.begin(async (tx: any) => {
+      const inserted = await tx`
+        INSERT INTO food_logs (user_id, date, meal_type, description, kcal, protein_g, carbs_g, fat_g, logged_via, confidence_score)
+        VALUES (${dbUserId}, ${todayISO}, ${mealType}, ${desc}, ${kcal}, ${proteinG}, ${carbsG}, ${fatG}, 'snap_eat', ${confidence})
+        RETURNING *
+      `;
+      if (!inserted?.[0]) {
+        throw new Error('snap-eat: food_logs INSERT returned no row');
+      }
 
-    // Guard FIRST — bail before touching aggregate
-    if (!inserted?.[0]) {
-      console.error('snap-eat: food_logs INSERT returned no row');
-      return NextResponse.json({ error: 'No se pudo registrar la comida.' }, { status: 500 });
-    }
+      await tx`
+        INSERT INTO daily_nutrition (user_id, date, kcal_consumed, protein_g, carbs_g, fat_g, kcal_goal, protein_goal)
+        VALUES (${dbUserId}, ${todayISO}, ${kcal}, ${proteinG}, ${carbsG}, ${fatG}, 2200, 150)
+        ON CONFLICT (user_id, date) DO UPDATE SET
+          kcal_consumed = daily_nutrition.kcal_consumed + EXCLUDED.kcal_consumed,
+          protein_g = daily_nutrition.protein_g + EXCLUDED.protein_g,
+          carbs_g = daily_nutrition.carbs_g + EXCLUDED.carbs_g,
+          fat_g = daily_nutrition.fat_g + EXCLUDED.fat_g,
+          updated_at = now()
+      `;
 
-    await sql`
-      INSERT INTO daily_nutrition (user_id, date, kcal_consumed, protein_g, carbs_g, fat_g, kcal_goal, protein_goal)
-      VALUES (${dbUserId}, ${todayISO}, ${kcal}, ${proteinG}, ${carbsG}, ${fatG}, 2200, 150)
-      ON CONFLICT (user_id, date) DO UPDATE SET
-        kcal_consumed = daily_nutrition.kcal_consumed + EXCLUDED.kcal_consumed,
-        protein_g = daily_nutrition.protein_g + EXCLUDED.protein_g,
-        carbs_g = daily_nutrition.carbs_g + EXCLUDED.carbs_g,
-        fat_g = daily_nutrition.fat_g + EXCLUDED.fat_g,
-        updated_at = now()
-    `;
+      return inserted[0];
+    });
 
     return NextResponse.json({
       preview: false,
       confidence_score: confidence,
-      ...inserted[0],
+      ...insertedRow,
     });
   } catch (err: any) {
     console.error('snap-eat error:', err);
