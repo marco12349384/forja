@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiCall } from '@/lib/api';
+import { analytics } from '@/lib/analytics';
 import { spacing, radius, shadows } from '@/design/tokens';
 import { useTheme } from '@/design/ThemeContext';
 import { PressableScale } from '@/components/PressableScale';
@@ -392,8 +393,18 @@ export default function WorkoutPlayerScreen() {
         const token = await getToken();
         const data = await apiCall(`/api/workouts/${workoutId}`, token!);
         setWorkout(data);
+        analytics.track('workout_started', {
+          discipline: data.type ?? 'unknown',
+          duration_planned: data.estimated_duration_min ?? 0,
+          energy_at_start: null,
+        });
       } catch {
         setWorkout(MOCK_WORKOUT);
+        analytics.track('workout_started', {
+          discipline: MOCK_WORKOUT.type,
+          duration_planned: MOCK_WORKOUT.estimated_duration_min,
+          energy_at_start: null,
+        });
       } finally {
         setLoading(false);
       }
@@ -454,6 +465,8 @@ export default function WorkoutPlayerScreen() {
 
   // ── Exit confirmation ──────────────────────────────────────────────
   function handleExit() {
+    // TODO: track workout_skipped here once an explicit skip/abandon flow is designed.
+    // Properties needed: reason (string|null), day_of_week (e.g. 'lunes').
     Alert.alert(
       '¿Salir del entrenamiento?',
       'Tu progreso de esta sesión se perderá.',

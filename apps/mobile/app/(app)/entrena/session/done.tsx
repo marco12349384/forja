@@ -11,6 +11,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiCall } from '@/lib/api';
+import { analytics } from '@/lib/analytics';
 import { spacing, radius, shadows } from '@/design/tokens';
 import { useTheme } from '@/design/ThemeContext';
 
@@ -107,6 +108,20 @@ export default function WorkoutDoneScreen() {
 
   // ── Record workout session (silent fail) ───────────────────────────
   useEffect(() => {
+    const durationNum = Number(duration ?? 0);
+    const exercisesNum = Number(exercises ?? 0);
+    const totalSetsNum = Number(totalSets ?? 0);
+    const completedSetsNum = Number(completedSets ?? 0);
+    const completionPct = totalSetsNum > 0
+      ? Math.round((completedSetsNum / totalSetsNum) * 100)
+      : 100;
+
+    analytics.track('workout_completed', {
+      completion_pct: completionPct,
+      duration_actual: durationNum,
+      exercises_done: exercisesNum,
+    });
+
     async function record() {
       try {
         const token = await getToken();
@@ -118,10 +133,10 @@ export default function WorkoutDoneScreen() {
         await apiCall(`/api/workouts/${workoutId}/complete`, token, {
           method: 'POST',
           body: JSON.stringify({
-            duration_min: Number(duration ?? 0),
+            duration_min: durationNum,
             kcal_estimate: Number(kcal ?? 0),
-            total_sets: Number(totalSets ?? 0),
-            completed_sets: Number(completedSets ?? 0),
+            total_sets: totalSetsNum,
+            completed_sets: completedSetsNum,
           }),
         });
       } catch {

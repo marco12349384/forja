@@ -15,6 +15,7 @@ import { spacing, radius, shadows } from '@/design/tokens';
 import { useTheme } from '@/design/ThemeContext';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
+import { analytics } from '@/lib/analytics';
 
 // ── Types ────────────────────────────────────────────────────────
 interface Message {
@@ -219,6 +220,7 @@ export default function SOCIOScreen() {
     setInput('');
     setLoading(true);
 
+    const fetchStart = Date.now();
     try {
       const token = await getToken();
       const res = await fetch(
@@ -236,6 +238,7 @@ export default function SOCIOScreen() {
         }
       );
       const data = await res.json();
+      const responseTimeMs = Date.now() - fetchStart;
       const socioMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'socio',
@@ -243,6 +246,10 @@ export default function SOCIOScreen() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, socioMsg]);
+      analytics.track('socio_message_sent', {
+        intent_category: null,
+        response_time_ms: responseTimeMs,
+      });
     } catch {
       setMessages((prev) => [
         ...prev,

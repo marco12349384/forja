@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { spacing, radius, shadows } from '@/design/tokens';
 import { useTheme } from '@/design/ThemeContext';
 import type { OnboardingData, FitnessGoal, FitnessLevel, Equipment } from '@forja/types';
 import { PressableScale } from '@/components/PressableScale';
+import { analytics } from '@/lib/analytics';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -185,6 +186,7 @@ export default function OnboardingScreen() {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const prevStep = useRef(step);
 
+  const startTimeRef = useRef(Date.now());
   const [data, setData] = useState<PulsoOnboardingData>({
     equipment: [],
     injuries: [],
@@ -231,6 +233,10 @@ export default function OnboardingScreen() {
       await apiCall('/api/generate-plan', token, {
         method: 'POST',
         body: JSON.stringify({ profile: data }),
+      });
+      analytics.track('onboarding_completed', {
+        steps_skipped: 0,
+        time_to_complete: Math.round((Date.now() - startTimeRef.current) / 1000),
       });
       router.replace('/(app)/home');
     } catch (err) {

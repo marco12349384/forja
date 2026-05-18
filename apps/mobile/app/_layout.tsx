@@ -15,9 +15,18 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import { SpaceMono_400Regular } from '@expo-google-fonts/space-mono';
 import { ThemeProvider, useTheme } from '@/design/ThemeContext';
+import { analytics } from '@/lib/analytics';
 import '../global.css';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+
+function AnalyticsInit() {
+  const { getToken } = useAuth();
+  useEffect(() => {
+    analytics.init(getToken);
+  }, [getToken]);
+  return null;
+}
 
 function InitialLayout() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -60,6 +69,7 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ThemeProvider>
+        <AnalyticsInit />
         <InitialLayout />
       </ThemeProvider>
     </ClerkProvider>

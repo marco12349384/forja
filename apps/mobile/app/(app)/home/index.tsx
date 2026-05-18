@@ -15,6 +15,7 @@ import { useTheme } from '@/design/ThemeContext';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
 import { BreathingPulse } from '@/components/BreathingPulse';
+import { analytics } from '@/lib/analytics';
 
 // ── Types ────────────────────────────────────────────────────────
 type EnergyLevel = 1 | 2 | 3;
@@ -35,6 +36,7 @@ interface MiniMission {
   label: string;
   icon: string;
   done: boolean;
+  category?: string;
 }
 
 // ── Check-in Energía ─────────────────────────────────────────────
@@ -692,6 +694,12 @@ function QuickLog({ colors }: { colors: ReturnType<typeof useTheme>['colors'] })
   );
 }
 
+// TODO: track streak_maintained — this event should fire server-side when the daily
+// streak counter rolls over (cron job). Properties: streak_length (int).
+
+// TODO: track weekly_retro_viewed — fire when user views the weekly progress/retro screen
+// (no UI for that screen yet). Properties: score_this_week (int), vs_last_week (int delta).
+
 // ── Main Home Screen ──────────────────────────────────────────────
 const DAYS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
@@ -715,6 +723,26 @@ export default function HomeScreen() {
   const [scoreExplanation, setScoreExplanation] = useState<string | null>(null);
   const [bodyPhase, setBodyPhase] = useState<BodyPhaseSummary | null>(null);
   const [socioMsg] = useState(SOCIO_MESSAGES[new Date().getDay() % SOCIO_MESSAGES.length]);
+  const scoreViewedRef = useRef(false);
+
+  function handleEnergyChange(level: EnergyLevel) {
+    setEnergy(level);
+    analytics.track('daily_checkin_done', {
+      energy_level: level,
+      score_before: score > 0 ? score : null,
+    });
+  }
+
+  // Fire socio_score_viewed once per session when score loads with real data
+  useEffect(() => {
+    if (scoreViewedRef.current || score === 0) return;
+    scoreViewedRef.current = true;
+    // Compute lowest component from score explanation is not available — use score directly
+    analytics.track('socio_score_viewed', {
+      score,
+      lowest_component: 'unknown', // component breakdown not available at this level
+    });
+  }, [score]);
 
   useEffect(() => {
     async function load() {
@@ -742,6 +770,7 @@ export default function HomeScreen() {
               label: String(m.label),
               icon: String(m.icon),
               done: Boolean(m.done),
+              category: m.category ?? 'unknown',
             })),
           );
         }
@@ -772,6 +801,7 @@ export default function HomeScreen() {
 
   async function toggleMission(id: string) {
     // Optimistic update: mark as done locally immediately
+    const mission = missions.find((m) => m.id === id);
     setMissions((prev) =>
       prev.map((m) => (m.id === id && !m.done ? { ...m, done: true } : m)),
     );
@@ -779,6 +809,12 @@ export default function HomeScreen() {
       const token = await getToken();
       if (!token) return;
       await apiCall(`/api/mini-missions/${id}/complete`, token, { method: 'POST' });
+      if (mission && !mission.done) {
+        analytics.track('mini_mission_completed', {
+          mission_category: (mission as any).category ?? 'unknown',
+          time_to_complete_min: null,
+        });
+      }
       // Refresh missions and score in parallel after completing
       const [missionsResult, scoreResult] = await Promise.allSettled([
         apiCall('/api/mini-missions', token),
@@ -791,6 +827,7 @@ export default function HomeScreen() {
             label: String(m.label),
             icon: String(m.icon),
             done: Boolean(m.done),
+            category: m.category ?? 'unknown',
           })),
         );
       }
@@ -848,7 +885,7 @@ export default function HomeScreen() {
 
       {/* ── Check-in Energía ── */}
       <FadeInView delay={0}>
-        <CheckInEnergia value={energy} onChange={setEnergy} colors={colors} />
+        <CheckInEnergia value={energy} onChange={handleEnergyChange} colors={colors} />
       </FadeInView>
 
       {/* ── SOCIO Message ── */}

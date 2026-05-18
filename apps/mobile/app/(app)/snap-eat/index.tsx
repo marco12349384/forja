@@ -18,6 +18,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { spacing, radius, shadows } from '@/design/tokens';
 import { useTheme } from '@/design/ThemeContext';
 import { apiCall } from '@/lib/api';
+import { analytics } from '@/lib/analytics';
 
 // ── Types ─────────────────────────────────────────────────────────
 type MealType = 'desayuno' | 'almuerzo' | 'cena' | 'snack';
@@ -119,12 +120,21 @@ export default function SnapEatScreen() {
 
       setSnapResult(data);
 
+      analytics.track('snap_eat_used', {
+        confidence_score: data.confidence_score,
+        manual_correction: data.preview,
+      });
+
       if (data.preview) {
         // Low confidence — show edit form
         populateEditForm(data);
         setState('preview');
       } else {
         // High confidence — logged automatically
+        analytics.track('meal_logged', {
+          method: 'snap',
+          kcal: data.kcal,
+        });
         setState('done');
         setTimeout(() => router.back(), 1500);
       }
@@ -217,6 +227,10 @@ export default function SnapEatScreen() {
         carbs_g: editCarbs !== '' ? parseFloat(editCarbs) : 0,
         fat_g: editFat !== '' ? parseFloat(editFat) : 0,
         preview: false,
+      });
+      analytics.track('meal_logged', {
+        method: 'snap',
+        kcal: kcalNum,
       });
       setState('done');
       setTimeout(() => router.back(), 1500);

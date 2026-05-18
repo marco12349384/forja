@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { spacing, radius, shadows } from '@/design/tokens';
 import { useTheme } from '@/design/ThemeContext';
 import { apiCall } from '@/lib/api';
+import { analytics } from '@/lib/analytics';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
 
@@ -204,6 +205,10 @@ const LogFoodModal = memo(function LogFoodModal({
           carbs_g: carbsG !== '' ? parseFloat(carbsG) : null,
           fat_g: fatG !== '' ? parseFloat(fatG) : null,
         }),
+      });
+      analytics.track('meal_logged', {
+        method: 'manual',
+        kcal: kcalNum,
       });
       onSuccess();
       onClose();
