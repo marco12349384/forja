@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightColors, darkColors } from './tokens';
+import { lightColors, darkColors, ThemeColors } from './tokens';
 
 type Mode = 'light' | 'dark' | 'system';
 type Theme = 'light' | 'dark';
@@ -9,7 +9,7 @@ type Theme = 'light' | 'dark';
 interface ThemeContextType {
   mode: Mode;
   theme: Theme;
-  colors: typeof lightColors;
+  colors: ThemeColors;
   setMode: (m: Mode) => void;
 }
 

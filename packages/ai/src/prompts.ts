@@ -76,15 +76,15 @@ export function buildGeneratePlanPrompt(profile: OnboardingData & {
 
 PERFIL DEL USUARIO:
 - Objetivo: ${profile.goal}
-- Nivel: ${profile.fitnessLevel ?? profile.fitness_level}
+- Nivel: ${profile.fitnessLevel ?? (profile as any).fitness_level}
 - Edad: ${profile.age ?? 'no especificada'}
 - Peso: ${profile.weightKg ? `${profile.weightKg} kg` : 'no especificado'}
 - Altura: ${profile.heightCm ? `${profile.heightCm} cm` : 'no especificada'}
 - Sexo: ${profile.gender ?? 'no especificado'}
-- Equipo disponible: ${(profile.equipment ?? profile.available_equipment ?? []).join(', ') || 'ninguno'}
+- Equipo disponible: ${(profile.equipment ?? (profile as any).available_equipment ?? []).join(', ') || 'ninguno'}
 - Lugar de entrenamiento: ${profile.trainingLocation ?? 'varía'}
-- Días por semana: ${profile.daysPerWeek ?? profile.days_per_week}
-- Duración por sesión: ${profile.sessionDurationMin ?? profile.session_duration_min} minutos
+- Días por semana: ${profile.daysPerWeek ?? (profile as any).days_per_week}
+- Duración por sesión: ${profile.sessionDurationMin ?? (profile as any).session_duration_min} minutos
 - Lesiones/restricciones: ${(profile.injuries ?? []).join(', ') || 'ninguna'}
 - Dieta: ${profile.dietType ?? 'omnívoro'}
 - Presupuesto de comida: ${profile.budget ?? 'no especificado'}
@@ -92,12 +92,12 @@ PERFIL DEL USUARIO:
 - Alergias: ${(profile.allergies ?? []).join(', ') || 'ninguna'}
 
 INSTRUCCIONES:
-1. Genera un plan de 4 semanas con ${profile.daysPerWeek ?? profile.days_per_week} días de entrenamiento por semana
+1. Genera un plan de 4 semanas con ${profile.daysPerWeek ?? (profile as any).days_per_week} días de entrenamiento por semana
 2. Mezcla disciplinas apropiadas (gym, calistenia, yoga, movilidad, cardio, pilates) según el objetivo
 3. Incluye días de recuperación activa (yoga/movilidad) en la semana
 4. Adapta el volumen e intensidad al nivel del usuario
 5. Progresiona la dificultad semana a semana
-6. Cada workout debe durar aproximadamente ${profile.sessionDurationMin ?? profile.session_duration_min} minutos
+6. Cada workout debe durar aproximadamente ${profile.sessionDurationMin ?? (profile as any).session_duration_min} minutos
 7. Usa SOLO ejercicios de esta lista (por slug): flexion-brazos, flexion-diamante, sentadilla, pistol-squat, dominada, press-banca, fondos-paralelas, plancha, hollow-body-hold, zancada, hip-thrust, peso-muerto-rumano, curl-bicep, extension-tricep, remo-mancuerna, press-militar, yoga-guerrero, yoga-perro, yoga-arbol, pilates-puente, pilates-cien
 
 RESPONDE SOLO con JSON válido con esta estructura exacta:

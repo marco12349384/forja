@@ -8,6 +8,29 @@
  *   const { colors } = useTheme();
  */
 
+// ── Theme colors type (union shape for both light + dark) ─────────
+export interface ThemeColors {
+  primary: string;
+  energy: string;
+  calm: string;
+  ai: string;
+  success: string;
+  warning: string;
+  error: string;
+  primaryLight: string;
+  primaryFade: string;
+  energyFade: string;
+  calmFade: string;
+  aiFade: string;
+  bg: string;
+  surface: string;
+  card: string;
+  text: string;
+  muted: string;
+  subtle: string;
+  border: string;
+}
+
 // ── Base / brand colors (same in both themes) ─────────────────────
 const baseColors = {
   primary: '#2D1B69',
@@ -15,10 +38,8 @@ const baseColors = {
   calm: '#6ABEA7',
   ai: '#A78BFA',
   success: '#22C55E',
-  // Semantic
   warning: '#FBBF24',
   error: '#F87171',
-  // Fade variants (semi-transparent accents, same in both themes)
   primaryLight: '#4C2FAB',
   primaryFade: 'rgba(45,27,105,0.08)',
   energyFade: 'rgba(255,107,71,0.12)',
@@ -26,7 +47,7 @@ const baseColors = {
   aiFade: 'rgba(167,139,250,0.12)',
 };
 
-export const lightColors = {
+export const lightColors: ThemeColors = {
   ...baseColors,
   bg: '#F7F3EF',
   surface: '#FFFFFF',
@@ -35,9 +56,9 @@ export const lightColors = {
   muted: '#78716C',
   subtle: '#A8A29E',
   border: '#E7E5E4',
-} as const;
+};
 
-export const darkColors = {
+export const darkColors: ThemeColors = {
   ...baseColors,
   bg: '#0F0E17',
   surface: '#1C1A2E',
@@ -46,7 +67,7 @@ export const darkColors = {
   muted: '#C4B8E0',
   subtle: '#8B7FB8',
   border: '#3A3458',
-} as const;
+};
 
 // Default export — keeps backward compat for static usages (shadows, tabBar defaults)
 export const colors = lightColors;

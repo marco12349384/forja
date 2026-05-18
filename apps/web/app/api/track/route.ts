@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     }));
 
     await sql`
-      INSERT INTO analytics_events ${sql(rows, 'user_id', 'event_name', 'properties', 'occurred_at')}
+      INSERT INTO analytics_events ${sql(rows as any, 'user_id', 'event_name', 'properties', 'occurred_at')}
     `;
 
     return NextResponse.json({ inserted: validated.length });

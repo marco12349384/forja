@@ -422,7 +422,7 @@ export default function WorkoutPlayerScreen() {
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
-        intervalRef.current = undefined;
+        intervalRef.current = null;
       }
     }
     return () => {
