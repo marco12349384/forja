@@ -43,7 +43,7 @@
 html, body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', 'Instrument Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -74,15 +74,25 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
-/* ── TYPOGRAPHY ── */
+/* ── TYPOGRAPHY ── Nike-style condensed bold ── */
 .font-display {
-  font-family: 'Syne', system-ui, sans-serif;
+  font-family: 'Barlow Condensed', 'Bebas Neue', system-ui, sans-serif;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  line-height: 0.92;
+}
+
+.font-display-tight {
+  font-family: 'Barlow Condensed', system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  line-height: 0.88;
 }
 
 .font-body {
-  font-family: 'Instrument Sans', system-ui, sans-serif;
+  font-family: 'Inter', 'Instrument Sans', system-ui, sans-serif;
 }
 
 /* Tabular numbers for stats */
@@ -160,19 +170,20 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
-  font-family: 'Syne', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: -0.01em;
-  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  font-family: 'Barlow Condensed', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: var(--radius-full);
   border: 1px solid transparent;
   cursor: pointer;
   user-select: none;
   transition: background var(--duration-fast) var(--ease-out),
               border-color var(--duration-fast) var(--ease-out),
               transform var(--duration-fast) var(--ease-out);
-  min-height: 44px;
+  min-height: 48px;
 }
 .btn:active:not(:disabled) {
   transform: scale(0.97);
@@ -242,57 +253,62 @@ a:focus-visible {
 .page-hero-content {
   max-width: 64rem;
   margin: 0 auto;
-  padding: 1.75rem 1.5rem 2rem;
+  padding: 2rem 1.5rem 2.5rem;
   position: relative;
 }
 .page-hero h1 {
-  font-family: 'Syne', system-ui, sans-serif;
-  font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-  font-size: clamp(32px, 7vw, 56px);
+  font-family: 'Barlow Condensed', system-ui, sans-serif;
+  font-weight: 900;
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  font-size: clamp(48px, 11vw, 96px);
 }
 .page-hero-tag {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 3px;
+  font-weight: 700;
+  letter-spacing: 4px;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 /* Decorative background text */
 .deco-text {
   position: absolute;
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
   pointer-events: none;
   user-select: none;
   color: rgba(232,255,71,0.04);
   line-height: 1;
   right: -10px;
   top: -20px;
-  font-size: clamp(80px, 14vw, 180px);
+  font-size: clamp(100px, 16vw, 220px);
 }
 
 /* Stats display */
 .stat-num {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  letter-spacing: -0.01em;
 }
 
 /* Sets/reps pill (workout) */
 .set-pill {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
   padding: 4px 12px;
   border-radius: var(--radius-full);
   background: var(--accent);
   color: #000;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Mobile-first spacing */

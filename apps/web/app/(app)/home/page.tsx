@@ -7,8 +7,16 @@ const DAYS_ES_DISPLAY: Record<string, string> = {
   domingo: 'Domingo', lunes: 'Lunes', martes: 'Martes',
   miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
 };
-const WORKOUT_EMOJI: Record<string, string> = {
-  calistenia: '🤸', gym: '🏋️', cardio: '🏃', home: '🏠', yoga: '🧘', movilidad: '🔄', pilates: '🧘‍♂️',
+
+// Gradient cover per workout type (Nike-style)
+const TYPE_COVER: Record<string, { gradient: string; label: string }> = {
+  calistenia: { gradient: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)', label: 'CALISTENIA' },
+  gym:        { gradient: 'linear-gradient(135deg, #E8FF47 0%, #B8DD0F 100%)', label: 'GYM' },
+  cardio:     { gradient: 'linear-gradient(135deg, #FF3D71 0%, #C70039 100%)', label: 'CARDIO' },
+  home:       { gradient: 'linear-gradient(135deg, #A78BFA 0%, #6B21A8 100%)', label: 'CASA' },
+  yoga:       { gradient: 'linear-gradient(135deg, #6ABEA7 0%, #2D8F7C 100%)', label: 'YOGA' },
+  movilidad:  { gradient: 'linear-gradient(135deg, #38BDF8 0%, #0369A1 100%)', label: 'MOVILIDAD' },
+  pilates:    { gradient: 'linear-gradient(135deg, #EC4899 0%, #BE185D 100%)', label: 'PILATES' },
 };
 
 export default async function HomePage() {
@@ -22,134 +30,228 @@ export default async function HomePage() {
   const todayName = DAYS_ES[new Date().getDay()];
   const todayWorkout = plan ? await getTodayWorkout(plan.id, todayName) : null;
 
+  const cover = todayWorkout ? (TYPE_COVER[todayWorkout.type] ?? TYPE_COVER.home) : null;
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* Hero header */}
+      {/* Hero header — Nike style: gigantic name */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        <div
-          aria-hidden
-          className="absolute font-display pointer-events-none select-none"
-          style={{
-            right: '-10px', top: '-30px',
-            fontSize: 'clamp(80px, 14vw, 180px)',
-            fontWeight: 800,
-            color: 'rgba(232,255,71,0.04)',
-            lineHeight: 1,
-          }}
-        >
-          HOY
-        </div>
-        <div className="max-w-2xl mx-auto px-6 py-10 relative">
-          <div className="text-xs font-semibold tracking-[3px] uppercase mb-2" style={{ color: 'var(--accent)' }}>
-            ⚡ {DAYS_ES_DISPLAY[todayName]}
-          </div>
-          <h1 className="font-display leading-none" style={{ fontSize: 'clamp(36px, 8vw, 56px)', letterSpacing: '-0.03em' }}>
-            <span style={{ color: 'var(--text)' }}>HOLA,</span>{' '}
+        <div className="deco-text font-display">HOY</div>
+        <div className="page-hero-content max-w-3xl">
+          <div className="page-hero-tag">⚡ {DAYS_ES_DISPLAY[todayName]}</div>
+          <h1>
+            <span style={{ color: 'var(--text)' }}>HOLA</span>{' '}
             <span style={{ color: 'var(--accent)' }}>{userName.toUpperCase()}</span>
           </h1>
           {plan && (
-            <p className="text-sm mt-3" style={{ color: 'var(--muted)' }}>
-              Plan: <span style={{ color: 'var(--text)' }}>{plan.name}</span>
+            <p className="text-sm mt-4 uppercase tracking-wider font-semibold" style={{ color: 'var(--muted)' }}>
+              Plan · <span style={{ color: 'var(--text)' }}>{plan.name}</span>
             </p>
           )}
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-6 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
-        {/* Workout de hoy */}
-        {todayWorkout ? (
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            <div className="p-5">
-              <div className="text-[10px] uppercase tracking-[2px] mb-2" style={{ color: 'var(--accent)' }}>
-                Tu entreno de hoy
-              </div>
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="font-display text-2xl" style={{ fontWeight: 800 }}>{todayWorkout.name}</h3>
-                  <p className="text-sm mt-1 capitalize" style={{ color: 'var(--muted)' }}>
-                    {todayWorkout.type} · {todayWorkout.estimated_duration_min} min · {todayWorkout.difficulty}
-                  </p>
-                </div>
-                <span className="text-3xl">{WORKOUT_EMOJI[todayWorkout.type] ?? '⚡'}</span>
+        {/* ── HERO WORKOUT CARD (Nike-style with cover) ── */}
+        {todayWorkout && cover ? (
+          <Link href={`/workout/${todayWorkout.id}`} className="block group" aria-label={`Iniciar ${todayWorkout.name}`}>
+            <div className="relative rounded-3xl overflow-hidden" style={{ minHeight: 280 }}>
+              {/* Cover gradient */}
+              <div className="absolute inset-0" style={{ background: cover.gradient }} aria-hidden />
+              {/* Dark overlay for readability */}
+              <div
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)' }}
+                aria-hidden
+              />
+              {/* Decorative pattern */}
+              <div
+                aria-hidden
+                className="absolute font-display select-none pointer-events-none"
+                style={{
+                  right: '-20px', bottom: '-30px',
+                  fontSize: 'clamp(120px, 22vw, 240px)',
+                  fontWeight: 900,
+                  color: 'rgba(255,255,255,0.08)',
+                  lineHeight: 0.85,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {cover.label.slice(0, 4)}
               </div>
 
-              {/* Exercise preview */}
-              <div className="space-y-1.5 mb-5">
-                {todayWorkout.exercises?.slice(0, 5).map((ex: any, i: number) => (
+              {/* Content */}
+              <div className="relative p-6 sm:p-8 flex flex-col h-full" style={{ minHeight: 280 }}>
+                <div className="flex items-start justify-between mb-auto">
+                  <div className="text-xs font-bold tracking-[3px] uppercase" style={{ color: '#fff' }}>
+                    ⚡ Tu entreno · {cover.label}
+                  </div>
                   <div
-                    key={ex.id}
-                    className="flex items-center gap-3 p-2 rounded-lg text-sm"
-                    style={{ background: 'var(--surface2)' }}
+                    className="px-3 py-1 rounded-full font-display text-xs"
+                    style={{
+                      background: 'rgba(0,0,0,0.4)',
+                      backdropFilter: 'blur(8px)',
+                      color: '#fff',
+                      fontWeight: 800,
+                      letterSpacing: '1px',
+                    }}
                   >
-                    <span
-                      className="w-6 h-6 rounded-md flex items-center justify-center font-display text-xs"
-                      style={{ background: 'rgba(232,255,71,0.1)', color: 'var(--accent)', fontWeight: 800 }}
-                    >
-                      {i + 1}
+                    {todayWorkout.estimated_duration_min} MIN
+                  </div>
+                </div>
+
+                <div className="mt-12">
+                  <h2
+                    className="font-display"
+                    style={{
+                      color: '#fff',
+                      fontSize: 'clamp(40px, 8vw, 60px)',
+                      lineHeight: 0.92,
+                      fontWeight: 900,
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    {todayWorkout.name.toUpperCase()}
+                  </h2>
+
+                  <div className="flex items-center gap-4 mt-4 text-xs" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                    <span className="font-bold uppercase tracking-wider">
+                      📊 {todayWorkout.difficulty}
                     </span>
-                    <span className="flex-1 truncate">{ex.catalog?.name}</span>
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full font-display"
-                      style={{ background: 'var(--accent)', color: '#000', fontWeight: 700 }}
-                    >
-                      {ex.sets}×{ex.reps}
+                    <span>•</span>
+                    <span className="font-bold uppercase tracking-wider">
+                      💪 {(todayWorkout.exercises?.length ?? 0)} ejercicios
                     </span>
                   </div>
-                ))}
-                {(todayWorkout.exercises?.length ?? 0) > 5 && (
-                  <p className="text-xs pl-2" style={{ color: 'var(--muted)' }}>
-                    +{(todayWorkout.exercises?.length ?? 0) - 5} ejercicios más al abrir
-                  </p>
-                )}
-              </div>
 
-              {/* CTA button */}
-              <Link
-                href={`/workout/${todayWorkout.id}`}
-                className="btn btn-primary w-full text-base"
-                style={{ fontSize: '15px', minHeight: 52 }}
-              >
-                ▶ Iniciar entrenamiento
-              </Link>
+                  <div
+                    className="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full font-display transition-transform group-hover:scale-105"
+                    style={{
+                      background: '#fff',
+                      color: '#000',
+                      fontWeight: 800,
+                      fontSize: '15px',
+                      letterSpacing: '1px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    ▶ Iniciar ahora
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </Link>
         ) : (
-          <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          /* Rest day or no plan */
+          <div className="card p-10 text-center" style={{ minHeight: 240 }}>
             {plan ? (
               <>
-                <p className="text-5xl mb-3">🧘</p>
-                <p className="font-display text-xl" style={{ fontWeight: 700 }}>Día de descanso</p>
-                <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>
-                  Tu cuerpo también se forja descansando
+                <p className="text-5xl mb-4">🌙</p>
+                <h2 className="font-display text-3xl" style={{ fontWeight: 800 }}>Día de descanso</h2>
+                <p className="text-sm mt-3 max-w-xs mx-auto" style={{ color: 'var(--muted)' }}>
+                  Tu cuerpo crece descansando. Aprovecha para recargar.
                 </p>
               </>
             ) : (
               <>
-                <p className="text-5xl mb-3">⚡</p>
-                <p className="font-display text-xl" style={{ fontWeight: 700 }}>Sin plan activo</p>
-                <Link href="/onboarding" className="btn btn-primary mt-4 inline-flex">
-                  Crear mi plan con IA
+                <p className="text-5xl mb-4">⚡</p>
+                <h2 className="font-display text-3xl" style={{ fontWeight: 800 }}>Empieza aquí</h2>
+                <p className="text-sm mt-3 mb-6 max-w-sm mx-auto" style={{ color: 'var(--muted)' }}>
+                  Genera tu plan personalizado con SOCIO en 30 segundos.
+                </p>
+                <Link href="/onboarding" className="btn btn-primary inline-flex">
+                  Crear mi plan
                 </Link>
               </>
             )}
           </div>
         )}
 
-        {/* Quick actions */}
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { href: '/dashboard', emoji: '📊', name: 'Dashboard', desc: 'SOCIO Score + macros' },
-            { href: '/progress',  emoji: '📈', name: 'Progreso',  desc: '30 días + timeline' },
-            { href: '/library',   emoji: '📚', name: 'Biblioteca', desc: 'Ejercicios catalogados' },
-            { href: '/settings',  emoji: '⚙️', name: 'Ajustes',    desc: 'Tema · cuenta' },
-          ].map((a) => (
-            <Link key={a.href} href={a.href} className="card card-interactive p-4 block" aria-label={a.name}>
-              <p className="text-2xl mb-2" aria-hidden>{a.emoji}</p>
-              <p className="font-display text-sm" style={{ fontWeight: 700 }}>{a.name}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{a.desc}</p>
-            </Link>
-          ))}
+        {/* ── EXERCISE PREVIEW (collapsible-feel) ── */}
+        {todayWorkout && (todayWorkout.exercises?.length ?? 0) > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display text-lg" style={{ fontWeight: 800, letterSpacing: '1px' }}>
+                EJERCICIOS DE HOY
+              </h3>
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
+                {todayWorkout.exercises?.length ?? 0} total
+              </span>
+            </div>
+            <div className="space-y-2">
+              {todayWorkout.exercises?.slice(0, 5).map((ex: any, i: number) => (
+                <div key={ex.id} className="card p-3 flex items-center gap-3">
+                  <span
+                    className="font-display text-2xl flex-shrink-0 w-10 text-center"
+                    style={{ color: 'var(--accent)', fontWeight: 900 }}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold truncate uppercase tracking-wide text-sm">
+                      {ex.catalog?.name}
+                    </p>
+                    <p className="text-xs uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
+                      {ex.catalog?.type || 'ejercicio'} · descanso {ex.rest_seconds}s
+                    </p>
+                  </div>
+                  <span className="set-pill">
+                    {ex.sets}×{ex.reps}
+                  </span>
+                </div>
+              ))}
+              {(todayWorkout.exercises?.length ?? 0) > 5 && (
+                <p className="text-xs text-center pt-1" style={{ color: 'var(--muted)' }}>
+                  +{(todayWorkout.exercises?.length ?? 0) - 5} más al iniciar el entreno
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── EXPLORE GRID — Nike-style ── */}
+        <div>
+          <h3 className="font-display text-lg mb-3" style={{ fontWeight: 800, letterSpacing: '1px' }}>
+            EXPLORAR
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { href: '/dashboard', emoji: '📊', name: 'Stats',      desc: 'SOCIO Score · macros',  gradient: 'linear-gradient(135deg, #E8FF47 0%, #B8DD0F 100%)' },
+              { href: '/progress',  emoji: '📈', name: 'Progreso',   desc: '30 días · timeline',    gradient: 'linear-gradient(135deg, #FF6B35 0%, #C70039 100%)' },
+              { href: '/library',   emoji: '📚', name: 'Ejercicios', desc: 'Biblioteca completa',    gradient: 'linear-gradient(135deg, #A78BFA 0%, #6B21A8 100%)' },
+              { href: '/settings',  emoji: '⚙️', name: 'Ajustes',    desc: 'Tema · cuenta',          gradient: 'linear-gradient(135deg, #38BDF8 0%, #0369A1 100%)' },
+            ].map((a) => (
+              <Link
+                key={a.href}
+                href={a.href}
+                className="relative rounded-2xl overflow-hidden group"
+                style={{ aspectRatio: '1.2 / 1', minHeight: 140 }}
+                aria-label={a.name}
+              >
+                <div className="absolute inset-0" style={{ background: a.gradient }} aria-hidden />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 100%)' }}
+                  aria-hidden
+                />
+                <div className="absolute inset-0 p-4 flex flex-col justify-between transition-transform group-hover:scale-[1.02]">
+                  <span className="text-2xl" aria-hidden>{a.emoji}</span>
+                  <div>
+                    <p
+                      className="font-display"
+                      style={{ color: '#fff', fontWeight: 900, fontSize: 22, letterSpacing: '-0.01em' }}
+                    >
+                      {a.name.toUpperCase()}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                      {a.desc}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
