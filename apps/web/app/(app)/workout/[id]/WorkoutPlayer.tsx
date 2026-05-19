@@ -31,8 +31,9 @@ interface WorkoutData {
   exercises: ExerciseRow[];
 }
 
-const TYPE_EMOJI: Record<string, string> = {
-  calistenia: '🤸', gym: '🏋️', cardio: '🏃', home: '🏠', yoga: '🧘', movilidad: '🔄',
+const TYPE_LABEL: Record<string, string> = {
+  calistenia: 'CALISTENIA', gym: 'GYM', cardio: 'CARDIO', home: 'CASA',
+  yoga: 'YOGA', movilidad: 'MOVILIDAD', pilates: 'PILATES',
 };
 
 export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
@@ -50,7 +51,16 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
 
   // Session start
   const startTimeRef = useRef<number>(Date.now());
+  const [elapsedMin, setElapsedMin] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+
+  // Elapsed counter (updates every 30s for the header)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setElapsedMin(Math.floor((Date.now() - startTimeRef.current) / 60000));
+    }, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -73,7 +83,6 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
   useEffect(() => {
     if (restSeconds === 0 && restRunning) {
       setRestRunning(false);
-      // Try to vibrate (mobile browsers)
       if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
         try { navigator.vibrate([200, 100, 200]); } catch {}
       }
@@ -96,7 +105,7 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
   const handleFinish = async () => {
     setSubmitting(true);
     const durationMin = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000));
-    const kcalEstimate = Math.round(durationMin * 7); // rough
+    const kcalEstimate = Math.round(durationMin * 7);
     try {
       const res = await fetch(`/api/workouts/${workout.id}/complete`, {
         method: 'POST',
@@ -108,9 +117,7 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
           completed_sets: doneSets,
         }),
       });
-      if (!res.ok) {
-        console.warn('complete failed', res.status);
-      }
+      if (!res.ok) console.warn('complete failed', res.status);
     } catch (e) {
       console.warn('complete error', e);
     } finally {
@@ -124,209 +131,291 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
     return `${m}:${String(sec).padStart(2, '0')}`;
   };
 
+  const typeLabel = TYPE_LABEL[workout.type] ?? workout.type.toUpperCase();
+
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* Header */}
-      <div className="border-b sticky top-0 z-10" style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      {/* ════════ STICKY HEADER ════════ */}
+      <div className="border-b sticky top-0 z-30" style={{ borderColor: 'var(--border)', background: 'rgba(13,13,13,0.92)', backdropFilter: 'blur(20px)' }}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <button onClick={() => router.push('/home')} className="btn-back flex-shrink-0" aria-label="Volver al inicio">
             ← Inicio
           </button>
           <div className="flex-1 min-w-0 text-center">
-            <div className="text-[10px] tracking-[2px] uppercase truncate" style={{ color: 'var(--muted)' }}>
-              {workout.day_of_week} · {workout.difficulty}
+            <div className="text-[9px] sm:text-[10px] tracking-[2px] uppercase font-bold" style={{ color: 'var(--accent)' }}>
+              {typeLabel}
             </div>
-            <h1 className="font-display text-base sm:text-lg truncate" style={{ fontWeight: 800 }}>
-              {TYPE_EMOJI[workout.type] ?? '⚡'} {workout.name}
+            <h1 className="font-display truncate" style={{ fontSize: 'clamp(15px, 4vw, 19px)', letterSpacing: '0' }}>
+              {workout.name.toUpperCase()}
             </h1>
           </div>
           <div className="text-right flex-shrink-0">
-            <div className="font-display text-2xl" style={{ fontWeight: 800, color: 'var(--accent)' }}>{pct}%</div>
-            <div className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
+            <div className="stat-num" style={{ fontSize: 24, color: 'var(--accent)' }}>{pct}%</div>
+            <div className="text-[9px] uppercase tracking-wider font-bold" style={{ color: 'var(--muted)' }}>
               {doneSets}/{totalSets}
             </div>
           </div>
         </div>
         {/* Progress bar */}
         <div className="h-1" style={{ background: 'var(--surface2)' }}>
-          <div className="h-full transition-all" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
+          <div
+            className="h-full transition-all duration-500 ease-out"
+            style={{ width: `${pct}%`, background: pct === 100 ? 'var(--success)' : 'var(--accent)' }}
+          />
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-6 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-4 sm:space-y-5">
 
-        {/* Timer Widget */}
-        <div className="rounded-2xl p-4 flex items-center gap-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="flex-1">
-            <div className="text-[10px] uppercase tracking-[2px]" style={{ color: 'var(--muted)' }}>
-              Descanso entre series
+        {/* ════════ TIMER WIDGET ════════ */}
+        <div
+          className="rounded-3xl p-5 sm:p-6 relative overflow-hidden"
+          style={{
+            background: restRunning
+              ? 'linear-gradient(135deg, rgba(232,255,71,0.15), rgba(232,255,71,0.04))'
+              : 'var(--surface)',
+            border: `1px solid ${restRunning ? 'var(--accent-border)' : 'var(--border)'}`,
+            transition: 'all 300ms ease',
+          }}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] sm:text-xs uppercase tracking-[3px] font-bold mb-1" style={{ color: restRunning ? 'var(--accent)' : 'var(--muted)' }}>
+                {restRunning ? '⏳ DESCANSANDO' : 'DESCANSO ENTRE SERIES'}
+              </div>
+              <div className="stat-num" style={{ fontSize: 'clamp(48px, 11vw, 72px)', color: 'var(--accent)' }}>
+                {formatTime(restSeconds)}
+              </div>
+              <div className="flex gap-1.5 mt-3">
+                {[45, 60, 90].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setRestMax(s); setRestSeconds(s); setRestRunning(false); }}
+                    className="px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all"
+                    style={{
+                      background: restMax === s ? 'var(--accent)' : 'var(--surface2)',
+                      color: restMax === s ? '#000' : 'var(--muted)',
+                      border: `1px solid ${restMax === s ? 'var(--accent)' : 'var(--border)'}`,
+                    }}
+                  >
+                    {s}s
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="font-display text-4xl" style={{ fontWeight: 800, color: 'var(--accent)', lineHeight: 1 }}>
-              {formatTime(restSeconds)}
-            </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
             <button
               onClick={() => setRestRunning((r) => !r)}
-              className="px-4 py-2 rounded-lg font-semibold text-sm"
-              style={{ background: 'var(--accent)', color: '#000' }}
+              className="flex-shrink-0 rounded-full flex items-center justify-center font-display transition-transform active:scale-95"
+              style={{
+                width: 'clamp(64px, 14vw, 88px)',
+                height: 'clamp(64px, 14vw, 88px)',
+                background: 'var(--accent)',
+                color: '#000',
+                fontSize: 'clamp(24px, 5vw, 32px)',
+                fontWeight: 900,
+                boxShadow: restRunning ? '0 0 0 8px rgba(232,255,71,0.15)' : 'none',
+              }}
+              aria-label={restRunning ? 'Pausar descanso' : 'Iniciar descanso'}
             >
-              {restRunning ? '⏸ Pausar' : '▶ Inicio'}
+              {restRunning ? '❚❚' : '▶'}
             </button>
-            <div className="flex gap-1.5">
-              <button
-                onClick={() => { setRestMax(45); setRestSeconds(45); setRestRunning(false); }}
-                className="px-3 py-1 rounded-md text-[11px] font-medium"
-                style={{ background: 'var(--surface2)', color: 'var(--muted)', border: '1px solid var(--border)' }}
-              >
-                45s
-              </button>
-              <button
-                onClick={() => { setRestMax(60); setRestSeconds(60); setRestRunning(false); }}
-                className="px-3 py-1 rounded-md text-[11px] font-medium"
-                style={{ background: 'var(--surface2)', color: 'var(--muted)', border: '1px solid var(--border)' }}
-              >
-                60s
-              </button>
-              <button
-                onClick={() => { setRestMax(90); setRestSeconds(90); setRestRunning(false); }}
-                className="px-3 py-1 rounded-md text-[11px] font-medium"
-                style={{ background: 'var(--surface2)', color: 'var(--muted)', border: '1px solid var(--border)' }}
-              >
-                90s
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Exercises */}
+        {/* ════════ EXERCISES ════════ */}
         {workout.exercises.length === 0 ? (
-          <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            <p style={{ color: 'var(--muted)' }}>Este entrenamiento aún no tiene ejercicios asignados.</p>
+          <div className="card p-8 text-center">
+            <p className="text-3xl mb-3" aria-hidden>🏋️</p>
+            <p className="font-display text-base" style={{ letterSpacing: '1px' }}>SIN EJERCICIOS</p>
+            <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>Este entrenamiento aún no tiene ejercicios asignados.</p>
           </div>
         ) : (
-          workout.exercises.map((ex, idx) => {
-            const isOpen = openExercise === ex.id;
-            const setsArr = completedSets[ex.id] ?? new Array(ex.sets).fill(false);
-            const doneCount = setsArr.filter(Boolean).length;
-            const allDone = doneCount === ex.sets;
-            return (
-              <div
-                key={ex.id}
-                className="rounded-2xl overflow-hidden"
-                style={{
-                  background: 'var(--surface)',
-                  border: `1px solid ${allDone ? 'rgba(232,255,71,0.4)' : 'var(--border)'}`,
-                }}
-              >
-                <button
-                  onClick={() => setOpenExercise(isOpen ? null : ex.id)}
-                  className="w-full p-4 flex items-center gap-3 text-left"
-                  style={{ background: allDone ? 'rgba(232,255,71,0.06)' : 'transparent' }}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="font-display text-base sm:text-lg" style={{ letterSpacing: '1px' }}>EJERCICIOS</h2>
+              <span className="text-[10px] uppercase tracking-[2px] font-semibold" style={{ color: 'var(--muted)' }}>
+                {workout.exercises.length} total
+              </span>
+            </div>
+            {workout.exercises.map((ex, idx) => {
+              const isOpen = openExercise === ex.id;
+              const setsArr = completedSets[ex.id] ?? new Array(ex.sets).fill(false);
+              const doneCount = setsArr.filter(Boolean).length;
+              const allDone = doneCount === ex.sets;
+              return (
+                <div
+                  key={ex.id}
+                  className="rounded-2xl overflow-hidden transition-all"
+                  style={{
+                    background: 'var(--surface)',
+                    border: `1px solid ${allDone ? 'var(--accent-border)' : 'var(--border)'}`,
+                  }}
                 >
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center font-display text-sm flex-shrink-0"
-                    style={{
-                      background: allDone ? 'var(--accent)' : 'rgba(232,255,71,0.1)',
-                      color: allDone ? '#000' : 'var(--accent)',
-                      fontWeight: 800,
-                    }}
+                  <button
+                    onClick={() => setOpenExercise(isOpen ? null : ex.id)}
+                    className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 text-left transition-colors"
+                    style={{ background: allDone ? 'var(--accent-soft)' : 'transparent' }}
                   >
-                    {allDone ? '✓' : idx + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-display text-base truncate" style={{ fontWeight: 700 }}>
-                      {ex.catalog.name}
+                    {/* Number/check badge */}
+                    <div
+                      className="flex-shrink-0 rounded-xl flex items-center justify-center font-display transition-all"
+                      style={{
+                        width: 'clamp(48px, 10vw, 56px)',
+                        height: 'clamp(48px, 10vw, 56px)',
+                        background: allDone ? 'var(--accent)' : 'rgba(232,255,71,0.1)',
+                        color: allDone ? '#000' : 'var(--accent)',
+                        fontSize: 'clamp(20px, 4vw, 26px)',
+                        fontWeight: 900,
+                      }}
+                    >
+                      {allDone ? '✓' : String(idx + 1).padStart(2, '0')}
                     </div>
-                    <div className="text-[11px]" style={{ color: 'var(--muted)' }}>
-                      {ex.catalog.muscles_primary?.join(' · ') || ex.catalog.type}
-                    </div>
-                  </div>
-                  <div
-                    className="px-3 py-1 rounded-full text-xs font-bold flex-shrink-0"
-                    style={{ background: 'var(--accent)', color: '#000', fontFamily: 'Syne' }}
-                  >
-                    {ex.sets}×{ex.reps}
-                  </div>
-                </button>
-
-                {isOpen && (
-                  <div className="px-4 pb-4 border-t pt-3 space-y-3" style={{ borderColor: 'var(--border)' }}>
-                    {/* Set checkboxes */}
-                    <div className="space-y-2">
-                      {Array.from({ length: ex.sets }).map((_, setIdx) => {
-                        const done = setsArr[setIdx];
-                        return (
-                          <button
-                            key={setIdx}
-                            onClick={() => toggleSet(ex.id, setIdx, ex.sets)}
-                            className="w-full flex items-center gap-3 p-3 rounded-lg transition-all"
-                            style={{
-                              background: done ? 'rgba(232,255,71,0.1)' : 'var(--surface2)',
-                              border: `1px solid ${done ? 'rgba(232,255,71,0.4)' : 'var(--border)'}`,
-                            }}
-                          >
-                            <div
-                              className="w-6 h-6 rounded-md flex items-center justify-center text-sm font-bold"
-                              style={{
-                                background: done ? 'var(--accent)' : 'transparent',
-                                color: done ? '#000' : 'var(--muted)',
-                                border: `2px solid ${done ? 'var(--accent)' : 'var(--border)'}`,
-                              }}
-                            >
-                              {done && '✓'}
-                            </div>
-                            <span className="text-sm flex-1 text-left" style={{ color: done ? 'var(--text)' : 'var(--muted)' }}>
-                              Set {setIdx + 1} · {ex.reps} reps
-                            </span>
-                            {!done && (
-                              <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
-                                Marca al terminar
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Tips */}
-                    {(ex.catalog.cues_correct?.length ?? 0) > 0 && (
-                      <div className="rounded-lg p-3 text-xs" style={{ background: 'var(--surface2)', color: 'var(--muted)' }}>
-                        <div className="font-bold mb-1" style={{ color: 'var(--accent)' }}>✓ Técnica</div>
-                        {(ex.catalog.cues_correct ?? []).slice(0, 3).map((c, i) => (
-                          <div key={i}>• {c}</div>
-                        ))}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display truncate" style={{ fontSize: 'clamp(15px, 3.5vw, 18px)', letterSpacing: '0.5px' }}>
+                        {ex.catalog.name.toUpperCase()}
                       </div>
-                    )}
-
-                    <div className="text-[11px] flex justify-between" style={{ color: 'var(--muted)' }}>
-                      <span>⏱ Descanso: {ex.rest_seconds}s</span>
-                      <span>{doneCount}/{ex.sets} sets</span>
+                      <div className="text-[10px] sm:text-[11px] uppercase tracking-[1.5px] mt-0.5 font-semibold" style={{ color: 'var(--muted)' }}>
+                        {ex.catalog.muscles_primary?.slice(0, 2).join(' · ') || ex.catalog.type}
+                      </div>
+                      {/* Mini progress dots */}
+                      {!isOpen && doneCount > 0 && (
+                        <div className="flex gap-1 mt-2">
+                          {Array.from({ length: ex.sets }).map((_, i) => (
+                            <div
+                              key={i}
+                              className="rounded-full"
+                              style={{
+                                width: 6, height: 6,
+                                background: setsArr[i] ? 'var(--accent)' : 'var(--border)',
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
+                    <span className="set-pill flex-shrink-0">
+                      {ex.sets}×{ex.reps}
+                    </span>
+                  </button>
 
-        {/* Action buttons */}
-        <div className="flex gap-3 sticky bottom-0 pb-4 pt-4" style={{ background: 'var(--bg)' }}>
-          <button onClick={() => router.push('/home')} disabled={submitting} className="btn btn-secondary flex-1">
+                  {isOpen && (
+                    <div className="px-4 sm:px-5 pb-5 border-t pt-4 space-y-3" style={{ borderColor: 'var(--border)' }}>
+                      {/* Set checkboxes — bigger and more tactile */}
+                      <div className="space-y-2">
+                        {Array.from({ length: ex.sets }).map((_, setIdx) => {
+                          const done = setsArr[setIdx];
+                          return (
+                            <button
+                              key={setIdx}
+                              onClick={() => toggleSet(ex.id, setIdx, ex.sets)}
+                              className="w-full flex items-center gap-3 p-3 sm:p-4 rounded-xl transition-all active:scale-[0.99]"
+                              style={{
+                                background: done ? 'var(--accent-soft)' : 'var(--surface2)',
+                                border: `1.5px solid ${done ? 'var(--accent-border)' : 'var(--border)'}`,
+                                minHeight: 56,
+                              }}
+                              aria-label={`Set ${setIdx + 1}${done ? ' completado' : ''}`}
+                            >
+                              <div
+                                className="rounded-lg flex items-center justify-center font-display flex-shrink-0 transition-all"
+                                style={{
+                                  width: 32, height: 32,
+                                  background: done ? 'var(--accent)' : 'transparent',
+                                  color: done ? '#000' : 'var(--muted)',
+                                  border: `2px solid ${done ? 'var(--accent)' : 'var(--border)'}`,
+                                  fontSize: 16,
+                                  fontWeight: 900,
+                                }}
+                              >
+                                {done && '✓'}
+                              </div>
+                              <div className="flex-1 text-left">
+                                <span className="font-display text-sm sm:text-base" style={{ letterSpacing: '0.5px', color: done ? 'var(--text)' : 'var(--text-dim)' }}>
+                                  SET {setIdx + 1}
+                                </span>
+                                <span className="text-[11px] sm:text-xs ml-2 uppercase tracking-wider font-semibold" style={{ color: 'var(--muted)' }}>
+                                  {ex.reps} reps
+                                </span>
+                              </div>
+                              {!done && (
+                                <span className="text-[9px] uppercase tracking-[1.5px] font-bold flex-shrink-0" style={{ color: 'var(--muted)' }}>
+                                  TOCA AL TERMINAR
+                                </span>
+                              )}
+                              {done && (
+                                <span className="text-[9px] uppercase tracking-[1.5px] font-bold flex-shrink-0" style={{ color: 'var(--accent)' }}>
+                                  ✓ HECHO
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Tips */}
+                      {(ex.catalog.cues_correct?.length ?? 0) > 0 && (
+                        <div className="rounded-xl p-3 sm:p-4" style={{ background: 'var(--surface2)' }}>
+                          <div className="text-[10px] uppercase tracking-[2px] font-bold mb-2" style={{ color: 'var(--accent)' }}>
+                            ✓ TÉCNICA
+                          </div>
+                          <ul className="space-y-1.5 text-xs sm:text-sm" style={{ color: 'var(--text-dim)' }}>
+                            {(ex.catalog.cues_correct ?? []).slice(0, 3).map((c, i) => (
+                              <li key={i} className="flex gap-2">
+                                <span style={{ color: 'var(--accent)' }}>•</span>
+                                <span>{c}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between text-[10px] uppercase tracking-wider font-bold pt-1" style={{ color: 'var(--muted)' }}>
+                        <span>⏱ Descanso · {ex.rest_seconds}s</span>
+                        <span>{doneCount} / {ex.sets} sets</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ════════ STICKY ACTION BAR ════════ */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-30 border-t safe-bottom"
+        style={{
+          background: 'rgba(13,13,13,0.95)',
+          backdropFilter: 'blur(24px)',
+          borderColor: 'var(--border)',
+          paddingTop: '12px',
+          paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          paddingLeft: '16px',
+          paddingRight: '16px',
+        }}
+      >
+        <div className="max-w-3xl mx-auto flex gap-2 sm:gap-3">
+          <button
+            onClick={() => router.push('/home')}
+            disabled={submitting}
+            className="btn btn-secondary flex-shrink-0"
+            style={{ minWidth: 100 }}
+          >
             Cancelar
           </button>
           <button
             onClick={handleFinish}
             disabled={submitting}
-            className="btn flex-[2]"
+            className="btn flex-1"
             style={{
               background: pct === 100 ? 'var(--success)' : 'var(--accent)',
               color: '#000',
-              fontSize: '15px',
+              fontSize: 'clamp(13px, 3vw, 15px)',
             }}
             aria-label={pct === 100 ? 'Terminar entrenamiento — completado' : 'Terminar entrenamiento'}
           >
-            {submitting ? 'Guardando...' : pct === 100 ? '🎉 Terminar entreno' : 'Terminar entreno →'}
+            {submitting ? '⏳ GUARDANDO...' : pct === 100 ? '🎉 TERMINAR · 100%' : `TERMINAR · ${pct}%`}
           </button>
         </div>
       </div>
