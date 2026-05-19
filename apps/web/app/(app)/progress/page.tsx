@@ -61,10 +61,25 @@ export default async function ProgressPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* ════════ HERO ════════ */}
+      {/* ════════ HERO (con imagen de atleta corriendo / progresión) ════════ */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'url(https://images.unsplash.com/photo-1486218119243-13883505764c?w=1600&h=600&fit=crop&auto=format&q=80)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.4,
+          }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(180deg, rgba(255,107,53,0.18) 0%, rgba(13,13,13,0.92) 100%)' }}
+          aria-hidden
+        />
         <div className="deco-text font-display">EVO</div>
-        <div className="page-hero-content max-w-4xl">
+        <div className="page-hero-content max-w-4xl relative">
           <div className="page-hero-tag">⚡ ÚLTIMOS 30 DÍAS</div>
           <h1>
             <span style={{ color: 'var(--text)' }}>TU</span>{' '}
@@ -119,20 +134,40 @@ export default async function ProgressPage() {
           </div>
         </div>
 
-        {/* ════════ TIMELINE 8 SEMANAS ════════ */}
-        <div className="card p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="font-display text-base sm:text-lg" style={{ letterSpacing: '1px' }}>📈 TU CAMINO</h2>
-              <p className="text-[10px] uppercase tracking-[2px] font-semibold mt-1" style={{ color: 'var(--muted)' }}>
-                Plan 8 semanas · Estás en semana {currentWeek}
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="stat-num" style={{ fontSize: 32, color: 'var(--accent)' }}>{currentWeek}</span>
-              <p className="text-[10px] uppercase tracking-[1.5px]" style={{ color: 'var(--muted)' }}>de 8</p>
+        {/* ════════ TIMELINE 8 SEMANAS (con banner de imagen) ════════ */}
+        <div className="card overflow-hidden">
+          {/* Banner image */}
+          <div
+            className="relative h-32 sm:h-40"
+            style={{
+              backgroundImage: 'url(https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&h=400&fit=crop&auto=format&q=80)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            <div
+              className="absolute inset-0"
+              style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(22,22,22,0.95) 100%)' }}
+              aria-hidden
+            />
+            <div className="absolute inset-0 flex items-end p-5 sm:p-6">
+              <div className="flex items-end justify-between w-full">
+                <div>
+                  <h2 className="font-display" style={{ fontSize: 'clamp(20px, 5vw, 28px)', letterSpacing: '1px', color: '#fff', fontWeight: 900 }}>
+                    📈 TU CAMINO
+                  </h2>
+                  <p className="text-[10px] sm:text-xs uppercase tracking-[2px] font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                    Plan 8 semanas · Estás en semana {currentWeek}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="stat-num" style={{ fontSize: 'clamp(32px, 7vw, 48px)', color: 'var(--accent)' }}>{currentWeek}</span>
+                  <p className="text-[10px] uppercase tracking-[1.5px] font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>de 8</p>
+                </div>
+              </div>
             </div>
           </div>
+          <div className="p-5 sm:p-6">
 
           <div className="relative pl-6">
             <div className="absolute left-2 top-3 bottom-3 w-0.5" style={{ background: 'var(--border)' }} />
@@ -175,6 +210,7 @@ export default async function ProgressPage() {
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
 

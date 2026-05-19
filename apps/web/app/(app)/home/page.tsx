@@ -331,26 +331,88 @@ export default async function HomePage() {
             </div>
           </Link>
         ) : (
-          /* Rest day or no plan */
-          <div className="card p-10 text-center" style={{ minHeight: 260 }}>
+          /* Rest day or no plan — WITH IMAGE */
+          <div className="relative rounded-3xl overflow-hidden" style={{ minHeight: 380 }}>
             {plan ? (
               <>
-                <p className="text-5xl mb-4" aria-hidden>🌙</p>
-                <h2 className="font-display text-3xl sm:text-4xl">Día de descanso</h2>
-                <p className="text-sm mt-3 max-w-xs mx-auto" style={{ color: 'var(--muted)' }}>
-                  Tu cuerpo crece descansando. Aprovecha para recargar.
-                </p>
+                {/* Rest day image — serene recovery scene */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1400&h=900&fit=crop&auto=format&q=85)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                  aria-hidden
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(180deg, rgba(167,139,250,0.15) 0%, rgba(0,0,0,0.85) 100%)' }}
+                  aria-hidden
+                />
+                <div
+                  aria-hidden
+                  className="absolute font-display select-none pointer-events-none"
+                  style={{
+                    right: '-30px', bottom: '-40px',
+                    fontSize: 'clamp(140px, 26vw, 240px)',
+                    fontWeight: 900,
+                    color: 'rgba(255,255,255,0.06)',
+                    lineHeight: 0.82,
+                  }}
+                >
+                  REST
+                </div>
+                <div className="relative p-8 sm:p-12 flex flex-col justify-center items-center text-center" style={{ minHeight: 380 }}>
+                  <p className="text-5xl mb-4" aria-hidden>🌙</p>
+                  <div className="text-[10px] sm:text-xs font-bold tracking-[3px] uppercase mb-2" style={{ color: '#fff' }}>
+                    Día de recuperación activa
+                  </div>
+                  <h2
+                    className="font-display"
+                    style={{
+                      color: '#fff',
+                      fontSize: 'clamp(36px, 8vw, 64px)',
+                      lineHeight: 0.88,
+                      fontWeight: 900,
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    DÍA DE DESCANSO
+                  </h2>
+                  <p className="text-sm sm:text-base mt-4 max-w-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                    Tu cuerpo crece descansando. Hoy: hidrátate, duerme y vuelve mañana con todo.
+                  </p>
+                </div>
               </>
             ) : (
               <>
-                <p className="text-5xl mb-4" aria-hidden>⚡</p>
-                <h2 className="font-display text-3xl sm:text-4xl">Empieza aquí</h2>
-                <p className="text-sm mt-3 mb-6 max-w-sm mx-auto" style={{ color: 'var(--muted)' }}>
-                  Genera tu plan personalizado con SOCIO en 30 segundos.
-                </p>
-                <Link href="/onboarding" className="btn btn-primary inline-flex">
-                  Crear mi plan
-                </Link>
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1400&h=900&fit=crop&auto=format&q=85)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                  aria-hidden
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(180deg, rgba(232,255,71,0.15) 0%, rgba(0,0,0,0.85) 100%)' }}
+                  aria-hidden
+                />
+                <div className="relative p-8 sm:p-12 flex flex-col justify-center items-center text-center" style={{ minHeight: 380 }}>
+                  <p className="text-5xl mb-4" aria-hidden>⚡</p>
+                  <h2 className="font-display" style={{ color: '#fff', fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 900 }}>
+                    EMPIEZA AQUÍ
+                  </h2>
+                  <p className="text-sm sm:text-base mt-3 mb-6 max-w-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                    Genera tu plan personalizado con SOCIO en 30 segundos.
+                  </p>
+                  <Link href="/onboarding" className="btn btn-primary">
+                    Crear mi plan
+                  </Link>
+                </div>
               </>
             )}
           </div>

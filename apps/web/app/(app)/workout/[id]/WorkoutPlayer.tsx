@@ -36,6 +36,16 @@ const TYPE_LABEL: Record<string, string> = {
   yoga: 'YOGA', movilidad: 'MOVILIDAD', pilates: 'PILATES',
 };
 
+const TYPE_IMG: Record<string, string> = {
+  calistenia: 'https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1600&h=600&fit=crop&auto=format&q=80',
+  gym:        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&h=600&fit=crop&auto=format&q=80',
+  cardio:     'https://images.unsplash.com/photo-1486218119243-13883505764c?w=1600&h=600&fit=crop&auto=format&q=80',
+  home:       'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1600&h=600&fit=crop&auto=format&q=80',
+  yoga:       'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1600&h=600&fit=crop&auto=format&q=80',
+  movilidad:  'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1600&h=600&fit=crop&auto=format&q=80',
+  pilates:    'https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=1600&h=600&fit=crop&auto=format&q=80',
+};
+
 export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
   const router = useRouter();
 
@@ -132,6 +142,7 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
   };
 
   const typeLabel = TYPE_LABEL[workout.type] ?? workout.type.toUpperCase();
+  const typeImg = TYPE_IMG[workout.type] ?? TYPE_IMG.home;
 
   return (
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
@@ -162,6 +173,60 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
             className="h-full transition-all duration-500 ease-out"
             style={{ width: `${pct}%`, background: pct === 100 ? 'var(--success)' : 'var(--accent)' }}
           />
+        </div>
+      </div>
+
+      {/* ════════ HERO BANNER (imagen del tipo) ════════ */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{
+          height: 'clamp(140px, 28vw, 220px)',
+          backgroundImage: `url(${typeImg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(13,13,13,1) 100%)' }}
+          aria-hidden
+        />
+        <div
+          aria-hidden
+          className="absolute font-display select-none pointer-events-none"
+          style={{
+            right: '-20px', bottom: '-30px',
+            fontSize: 'clamp(80px, 18vw, 160px)',
+            fontWeight: 900,
+            color: 'rgba(255,255,255,0.08)',
+            lineHeight: 0.82,
+          }}
+        >
+          {typeLabel.slice(0, 4)}
+        </div>
+        <div className="absolute inset-0 max-w-3xl mx-auto px-4 sm:px-6 flex flex-col justify-end pb-5">
+          <div className="text-[10px] sm:text-xs font-bold tracking-[3px] uppercase mb-1" style={{ color: 'var(--accent)' }}>
+            ⚡ EN PROGRESO · {typeLabel}
+          </div>
+          <h2
+            className="font-display"
+            style={{
+              color: '#fff',
+              fontSize: 'clamp(28px, 6vw, 44px)',
+              lineHeight: 0.9,
+              fontWeight: 900,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {workout.name.toUpperCase()}
+          </h2>
+          <div className="flex items-center gap-3 mt-2 text-[11px] uppercase tracking-[1.5px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            <span>{workout.difficulty}</span>
+            <span style={{ opacity: 0.5 }}>·</span>
+            <span>{workout.estimated_duration_min} min</span>
+            <span style={{ opacity: 0.5 }}>·</span>
+            <span>{workout.exercises.length} ejercicios</span>
+          </div>
         </div>
       </div>
 

@@ -96,10 +96,26 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* ════════ HERO HEADER ════════ */}
+      {/* ════════ HERO HEADER (con imagen) ════════ */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
+        {/* Background: heart-rate / data monitor */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'url(https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1600&h=600&fit=crop&auto=format&q=80)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.35,
+          }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(180deg, rgba(13,13,13,0.55) 0%, rgba(13,13,13,0.95) 100%)' }}
+          aria-hidden
+        />
         <div className="deco-text font-display">STATS</div>
-        <div className="page-hero-content max-w-4xl">
+        <div className="page-hero-content max-w-4xl relative">
           <div className="page-hero-tag">⚡ {MONTHS_ES[today.getMonth()].toUpperCase()} {today.getFullYear()}</div>
           <h1>
             <span style={{ color: 'var(--text)' }}>{userName.toUpperCase()},</span><br />
