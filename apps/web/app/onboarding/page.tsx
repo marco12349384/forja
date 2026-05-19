@@ -35,11 +35,12 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [data, setData] = useState<Partial<OnboardingData>>({
+  const [data, setData] = useState<Partial<OnboardingData> & { goals?: string[] }>({
     equipment: [],
     injuries: [],
     daysPerWeek: 3,
     sessionDurationMin: 45,
+    goals: [],
   });
 
   function toggleEquipment(eq: Equipment) {
@@ -48,6 +49,14 @@ export default function OnboardingPage() {
       return current.includes(eq)
         ? { ...prev, equipment: current.filter((e) => e !== eq) }
         : { ...prev, equipment: [...current, eq] };
+    });
+  }
+
+  function toggleGoal(g: string) {
+    setData((prev) => {
+      const current = (prev as any).goals ?? [];
+      const next = current.includes(g) ? current.filter((x: string) => x !== g) : [...current, g];
+      return { ...prev, goals: next, goal: (next[0] ?? '') as any };
     });
   }
 
@@ -70,7 +79,7 @@ export default function OnboardingPage() {
   }
 
   const canContinue =
-    (step === 1 && !!data.goal) ||
+    (step === 1 && ((data as any).goals?.length ?? 0) > 0) ||
     (step === 2 && !!data.fitnessLevel) ||
     step === 3 || step === 4 || step === 5;
 
@@ -87,18 +96,38 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold">¿Cuál es tu objetivo?</h2>
-              <p className="text-zinc-400 mt-1">La IA diseñará tu plan según esto</p>
+              <h2 className="text-2xl font-bold">¿Qué quieres lograr?</h2>
+              <p className="text-zinc-400 mt-1">Puedes elegir varios · SOCIO combina disciplinas para todos</p>
             </div>
             <div className="space-y-3">
-              {GOALS.map((g) => (
-                <button key={g.value} onClick={() => setData((p) => ({ ...p, goal: g.value }))}
-                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-colors ${data.goal === g.value ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600'}`}>
-                  <span className="text-2xl">{g.emoji}</span>
-                  <span className="font-semibold">{g.label}</span>
-                </button>
-              ))}
+              {GOALS.map((g) => {
+                const selectedGoals = ((data as any).goals as string[] | undefined) ?? [];
+                const active = selectedGoals.includes(g.value);
+                return (
+                  <button
+                    key={g.value}
+                    onClick={() => toggleGoal(g.value)}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-colors ${active ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600'}`}
+                    aria-pressed={active}
+                  >
+                    <span className="text-2xl">{g.emoji}</span>
+                    <span className="font-semibold flex-1 text-left">{g.label}</span>
+                    {/* Checkbox indicator */}
+                    <div
+                      className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-sm ${active ? 'bg-orange-500 text-black' : 'border-2 border-zinc-700 text-zinc-700'}`}
+                      aria-hidden
+                    >
+                      {active && '✓'}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+            <p className={`text-xs text-center uppercase tracking-wider font-semibold ${((data as any).goals?.length ?? 0) > 0 ? 'text-orange-400' : 'text-zinc-500'}`}>
+              {((data as any).goals?.length ?? 0) === 0
+                ? 'Elige al menos uno'
+                : `${(data as any).goals.length} ${(data as any).goals.length === 1 ? 'objetivo seleccionado' : 'objetivos seleccionados'}`}
+            </p>
           </div>
         )}
 

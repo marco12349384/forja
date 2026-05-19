@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 interface ProfileInput {
   goal: string;
+  goals?: string[];          // multi-select: array of goals
   fitnessLevel: string;
   equipment: string[];
   daysPerWeek: number;
@@ -50,12 +51,22 @@ const DURATION_OPTIONS = [20, 30, 45, 60, 75, 90];
 
 export function RegenerateForm({ initialProfile }: { initialProfile: ProfileInput }) {
   const router = useRouter();
-  const [profile, setProfile] = useState<ProfileInput>(initialProfile);
+  // Initialize goals array — use existing goals if available, otherwise start with single goal
+  const [profile, setProfile] = useState<ProfileInput>(() => ({
+    ...initialProfile,
+    goals: initialProfile.goals && initialProfile.goals.length > 0
+      ? initialProfile.goals
+      : initialProfile.goal ? [initialProfile.goal] : [],
+  }));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const toggleGoal = (g: string) => {
-    setProfile((p) => ({ ...p, goal: g }));
+    setProfile((p) => {
+      const current = p.goals ?? [];
+      const next = current.includes(g) ? current.filter((x) => x !== g) : [...current, g];
+      return { ...p, goals: next, goal: next[0] ?? '' };
+    });
   };
 
   const toggleEquipment = (e: string) => {
@@ -98,31 +109,54 @@ export function RegenerateForm({ initialProfile }: { initialProfile: ProfileInpu
         </p>
       </div>
 
-      {/* OBJETIVO */}
+      {/* OBJETIVOS — multi-select */}
       <section>
-        <h2 className="font-display text-base sm:text-lg mb-1" style={{ letterSpacing: '1px' }}>OBJETIVO PRINCIPAL</h2>
-        <p className="text-[10px] uppercase tracking-[2px] font-semibold mb-4" style={{ color: 'var(--muted)' }}>¿Qué quieres lograr?</p>
+        <h2 className="font-display text-base sm:text-lg mb-1" style={{ letterSpacing: '1px' }}>OBJETIVOS</h2>
+        <p className="text-[10px] uppercase tracking-[2px] font-semibold mb-4" style={{ color: 'var(--muted)' }}>
+          Puedes elegir varios · SOCIO combina disciplinas para todos
+        </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {GOALS.map((g) => {
-            const active = profile.goal === g.v;
+            const active = (profile.goals ?? []).includes(g.v);
             return (
               <button
                 key={g.v}
                 onClick={() => toggleGoal(g.v)}
-                className="card p-4 text-left transition-all active:scale-95"
+                className="card p-4 text-left transition-all active:scale-95 relative"
                 style={{
                   borderColor: active ? 'var(--accent)' : 'var(--border)',
                   background: active ? 'var(--accent-soft)' : 'var(--surface)',
                 }}
+                aria-pressed={active}
               >
+                {/* Checkbox indicator */}
+                <div
+                  className="absolute top-2 right-2 rounded-md flex items-center justify-center font-display text-xs"
+                  style={{
+                    width: 22,
+                    height: 22,
+                    background: active ? 'var(--accent)' : 'transparent',
+                    border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                    color: active ? '#000' : 'var(--muted)',
+                  }}
+                  aria-hidden
+                >
+                  {active && '✓'}
+                </div>
                 <div className="text-2xl mb-1" aria-hidden>{g.icon}</div>
-                <div className="font-display text-sm" style={{ letterSpacing: '0.5px', color: active ? 'var(--accent)' : 'var(--text)' }}>
+                <div className="font-display text-sm pr-6" style={{ letterSpacing: '0.5px', color: active ? 'var(--accent)' : 'var(--text)' }}>
                   {g.l.toUpperCase()}
                 </div>
               </button>
             );
           })}
         </div>
+        {/* Counter */}
+        <p className="text-[10px] uppercase tracking-[2px] font-semibold mt-3 text-center" style={{ color: (profile.goals?.length ?? 0) > 0 ? 'var(--accent)' : 'var(--muted)' }}>
+          {(profile.goals?.length ?? 0) === 0
+            ? 'Elige al menos uno'
+            : `${profile.goals!.length} ${profile.goals!.length === 1 ? 'objetivo seleccionado' : 'objetivos seleccionados'}`}
+        </p>
       </section>
 
       {/* NIVEL */}
@@ -262,7 +296,7 @@ export function RegenerateForm({ initialProfile }: { initialProfile: ProfileInpu
         </button>
         <button
           onClick={handleSubmit}
-          disabled={submitting || !profile.goal || !profile.fitnessLevel}
+          disabled={submitting || (profile.goals?.length ?? 0) === 0 || !profile.fitnessLevel}
           className="btn btn-primary flex-1"
           style={{ minHeight: 56, fontSize: 15 }}
         >
