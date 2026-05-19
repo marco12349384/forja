@@ -216,7 +216,7 @@ export default function OnboardingScreen() {
   }
 
   const canContinue = (() => {
-    if (step === 1) return !!data.goal;
+    if (step === 1) return !!data.goal || (((data as any).goals as string[] | undefined)?.length ?? 0) > 0;
     if (step === 2) return !!(data.weightKg && data.heightCm && data.age);
     if (step === 3) return !!data.fitnessLevel;
     if (step === 4) return !!(data.daysPerWeek && data.sessionDurationMin);
@@ -248,25 +248,71 @@ export default function OnboardingScreen() {
   // ── STEP CONTENT ──────────────────────────────────────────────
   function renderStep() {
     switch (step) {
-      // STEP 1 — Objetivo
-      case 1:
+      // STEP 1 — Objetivo (MULTI-SELECT)
+      case 1: {
+        const selectedGoals = ((data as any).goals as string[] | undefined) ?? (data.goal ? [data.goal] : []);
+        const toggleGoal = (g: string) => {
+          setData((p) => {
+            const current = ((p as any).goals as string[] | undefined) ?? (p.goal ? [p.goal] : []);
+            const next = current.includes(g) ? current.filter((x) => x !== g) : [...current, g];
+            return { ...p, goals: next, goal: next[0] ?? p.goal } as any;
+          });
+        };
         return (
           <>
-            <StepHeader step={1} title="¿Cuál es tu objetivo?" subtitle="Sé honesto contigo. No hay respuesta incorrecta." colors={colors} />
-            {GOALS.map((g) => (
-              <OptionBtn
-                key={g.value}
-                active={data.goal === g.value}
-                onPress={() => setData((p) => ({ ...p, goal: g.value }))}
-                icon={g.icon}
-                label={g.label}
-                desc={g.desc}
-                accentColor={colors.energy}
-                colors={colors}
-              />
-            ))}
+            <StepHeader step={1} title="¿Qué quieres lograr?" subtitle="Puedes elegir varios. SOCIO combinará disciplinas para todos." colors={colors} />
+            {GOALS.map((g) => {
+              const active = selectedGoals.includes(g.value);
+              return (
+                <TouchableOpacity
+                  key={g.value}
+                  onPress={() => toggleGoal(g.value)}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.md,
+                    padding: spacing.md,
+                    borderRadius: radius.md,
+                    borderWidth: 1.5,
+                    borderColor: active ? colors.energy : colors.border,
+                    backgroundColor: active ? `${colors.energy}10` : colors.surface,
+                  }}
+                >
+                  <Text style={{ fontSize: 28 }}>{g.icon}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 15, color: active ? colors.energy : colors.text }}>
+                      {g.label}
+                    </Text>
+                    <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.muted, marginTop: 2 }}>
+                      {g.desc}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 6,
+                      borderWidth: 2,
+                      borderColor: active ? colors.energy : colors.border,
+                      backgroundColor: active ? colors.energy : 'transparent',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {active && <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '700' }}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+            <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.subtle, marginTop: spacing.xs, textAlign: 'center' }}>
+              {selectedGoals.length === 0
+                ? 'Elige al menos uno para continuar'
+                : `${selectedGoals.length} ${selectedGoals.length === 1 ? 'objetivo seleccionado' : 'objetivos seleccionados'}`}
+            </Text>
           </>
         );
+      }
 
       // STEP 2 — Datos corporales
       case 2:
@@ -577,25 +623,80 @@ export default function OnboardingScreen() {
         );
 
       // STEP 4 — Disponibilidad
-      case 4:
+      case 4: {
+        const WEEK_DAYS = [
+          { key: 'lunes', label: 'L' },
+          { key: 'martes', label: 'M' },
+          { key: 'miercoles', label: 'X' },
+          { key: 'jueves', label: 'J' },
+          { key: 'viernes', label: 'V' },
+          { key: 'sabado', label: 'S' },
+          { key: 'domingo', label: 'D' },
+        ] as const;
+        const selectedDays = ((data as any).preferredDays as string[] | undefined) ?? [];
+        const toggleDay = (k: string) => {
+          setData((p) => {
+            const curr = ((p as any).preferredDays as string[] | undefined) ?? [];
+            const next = curr.includes(k) ? curr.filter((d) => d !== k) : [...curr, k];
+            return { ...p, preferredDays: next, daysPerWeek: next.length || p.daysPerWeek } as any;
+          });
+        };
         return (
           <>
-            <StepHeader step={4} title="¿Cuánto tiempo tienes?" subtitle="Sé realista con tu semana, no con la semana ideal." colors={colors} />
+            <StepHeader step={4} title="¿Cuánto tiempo tienes?" subtitle="Marca los días específicos que puedes entrenar y ajusta la duración." colors={colors} />
 
+            {/* Días específicos de la semana */}
             <View>
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.text, marginBottom: spacing.sm }}>
-                Días por semana:{' '}
+                Días que puedes entrenar
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+                {WEEK_DAYS.map((d) => {
+                  const active = selectedDays.includes(d.key);
+                  return (
+                    <TouchableOpacity
+                      key={d.key}
+                      onPress={() => toggleDay(d.key)}
+                      style={{
+                        flex: 1,
+                        height: 48,
+                        borderRadius: radius.md,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.energy : colors.border,
+                        backgroundColor: active ? colors.energy : colors.surface,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 14, color: active ? '#FFF' : colors.muted }}>
+                        {d.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.subtle, marginTop: 6 }}>
+                {selectedDays.length === 0
+                  ? 'Si no marcas ninguno, SOCIO escoge los días por ti.'
+                  : `${selectedDays.length} ${selectedDays.length === 1 ? 'día' : 'días'} por semana`}
+              </Text>
+            </View>
+
+            {/* Cantidad de días (alternativa rápida) */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.text, marginBottom: spacing.sm }}>
+                O elige cantidad de días:{' '}
                 <Text style={{ fontFamily: 'SpaceMono_400Regular', color: colors.energy, fontSize: 16 }}>
                   {data.daysPerWeek}
                 </Text>
               </Text>
               <View style={{ flexDirection: 'row', gap: spacing.xs }}>
                 {DAYS_OPTIONS.map((d) => {
-                  const active = data.daysPerWeek === d;
+                  const active = data.daysPerWeek === d && selectedDays.length === 0;
                   return (
                     <TouchableOpacity
                       key={d}
-                      onPress={() => setData((p) => ({ ...p, daysPerWeek: d }))}
+                      onPress={() => setData((p) => ({ ...p, daysPerWeek: d, preferredDays: [] } as any))}
                       style={{
                         flex: 1,
                         height: 44,
@@ -616,6 +717,7 @@ export default function OnboardingScreen() {
               </View>
             </View>
 
+            {/* Duración por sesión */}
             <View>
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.text, marginBottom: spacing.sm }}>
                 Minutos por sesión:{' '}
@@ -623,8 +725,8 @@ export default function OnboardingScreen() {
                   {data.sessionDurationMin} min
                 </Text>
               </Text>
-              <View style={{ flexDirection: 'row', gap: spacing.xs }}>
-                {DURATION_OPTIONS.map((m) => {
+              <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
+                {[20, 30, 45, 60, 75, 90, 120].map((m) => {
                   const active = data.sessionDurationMin === m;
                   return (
                     <TouchableOpacity
@@ -632,6 +734,7 @@ export default function OnboardingScreen() {
                       onPress={() => setData((p) => ({ ...p, sessionDurationMin: m }))}
                       style={{
                         flex: 1,
+                        minWidth: 80,
                         paddingVertical: 12,
                         borderRadius: radius.md,
                         borderWidth: 1.5,
@@ -640,16 +743,46 @@ export default function OnboardingScreen() {
                         alignItems: 'center',
                       }}
                     >
-                      <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: active ? colors.energy : colors.muted }}>
+                      <Text style={{ fontFamily: active ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: active ? colors.energy : colors.muted }}>
                         {m} min
                       </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
+
+              {/* Duración custom */}
+              <View style={{ marginTop: spacing.sm }}>
+                <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.subtle, marginBottom: 4 }}>
+                  ¿Otro tiempo? Escríbelo aquí:
+                </Text>
+                <TextInput
+                  keyboardType="number-pad"
+                  value={![20, 30, 45, 60, 75, 90, 120].includes(data.sessionDurationMin ?? 0) ? data.sessionDurationMin?.toString() ?? '' : ''}
+                  onChangeText={(v) => {
+                    const n = v ? parseInt(v) : undefined;
+                    if (n && n >= 10 && n <= 240) setData((p) => ({ ...p, sessionDurationMin: n }));
+                  }}
+                  placeholder="ej. 50"
+                  placeholderTextColor={colors.subtle}
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderWidth: 1.5,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: 10,
+                    fontFamily: 'DMSans_400Regular',
+                    fontSize: 14,
+                    color: colors.text,
+                    width: 100,
+                  }}
+                />
+              </View>
             </View>
           </>
         );
+      }
 
       // STEP 5 — Cuerpo + lesiones
       case 5:

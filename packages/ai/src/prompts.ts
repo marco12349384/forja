@@ -72,10 +72,17 @@ export function buildGeneratePlanPrompt(profile: OnboardingData & {
   allergies?: string[];
   trainingLocation?: string;
 }): string {
+  const goals = (profile as any).goals as string[] | undefined;
+  const goalsLine = goals && goals.length > 0 ? goals.join(', ') : (profile.goal ?? 'fitness_general');
+  const preferredDays = (profile as any).preferredDays as string[] | undefined;
+  const daysLine = preferredDays && preferredDays.length > 0
+    ? `${preferredDays.length} (${preferredDays.join(', ')})`
+    : `${profile.daysPerWeek ?? (profile as any).days_per_week} (sin preferencia de días específicos)`;
+
   return `Eres un coach de fitness y nutrición experto. Genera un plan de entrenamiento personalizado en JSON.
 
 PERFIL DEL USUARIO:
-- Objetivo: ${profile.goal}
+- Objetivos (combina disciplinas para todos): ${goalsLine}
 - Nivel: ${profile.fitnessLevel ?? (profile as any).fitness_level}
 - Edad: ${profile.age ?? 'no especificada'}
 - Peso: ${profile.weightKg ? `${profile.weightKg} kg` : 'no especificado'}
@@ -97,13 +104,14 @@ PERFIL DEL USUARIO:
 - % grasa corporal estimado: ${(profile as any).bodyFatPct ? `${(profile as any).bodyFatPct}%` : 'no especificado'}
 
 INSTRUCCIONES (sigue al pie de la letra para no exceder espacio):
-1. Plan de 4 semanas, ${profile.daysPerWeek ?? (profile as any).days_per_week} días/semana
-2. Mezcla gym/calistenia/yoga/movilidad/pilates según objetivo y experiencia
-3. Cada workout dura ~${profile.sessionDurationMin ?? (profile as any).session_duration_min} min
-4. Progresión semana a semana
-5. Usa SOLO estos slugs: flexion-brazos, flexion-diamante, sentadilla, pistol-squat, dominada, press-banca, fondos-paralelas, plancha, hollow-body-hold, zancada, hip-thrust, peso-muerto-rumano, curl-bicep, extension-tricep, remo-mancuerna, press-militar, yoga-guerrero, yoga-perro, yoga-arbol, pilates-puente, pilates-cien
-6. Máximo 5 ejercicios por workout. \`notes\` siempre null. \`focus\` máximo 40 chars. \`notes\` de semana null.
-7. NO agregues comentarios ni texto fuera del JSON.
+1. Plan de 4 semanas, días por semana: ${daysLine}
+2. Si hay días específicos, úsalos como \`day_of_week\` de cada workout. Si no, escoge tú.
+3. Combina disciplinas para cubrir TODOS los objetivos del usuario (gym/calistenia/yoga/movilidad/pilates/cardio)
+5. Cada workout dura ~${profile.sessionDurationMin ?? (profile as any).session_duration_min} min
+6. Progresión semana a semana
+7. Usa SOLO estos slugs: flexion-brazos, flexion-diamante, sentadilla, pistol-squat, dominada, press-banca, fondos-paralelas, plancha, hollow-body-hold, zancada, hip-thrust, peso-muerto-rumano, curl-bicep, extension-tricep, remo-mancuerna, press-militar, yoga-guerrero, yoga-perro, yoga-arbol, pilates-puente, pilates-cien
+8. Máximo 5 ejercicios por workout. \`notes\` siempre null. \`focus\` máximo 40 chars. \`notes\` de semana null.
+9. NO agregues comentarios ni texto fuera del JSON.
 
 RESPONDE SOLO con JSON válido con esta estructura exacta:
 {
