@@ -535,7 +535,7 @@ export default async function HomePage() {
         <div
           className="fixed bottom-0 left-0 right-0 z-40 sm:hidden border-t safe-bottom"
           style={{
-            background: 'rgba(236,231,220,0.95)',
+            background: 'rgba(191,184,171,0.95)',
             backdropFilter: 'blur(20px)',
             borderColor: 'var(--border)',
             paddingTop: '12px',

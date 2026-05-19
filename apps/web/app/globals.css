@@ -3,26 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* ── PRIMITIVE TOKENS — Washi paper aged + sumi + persimmon (neutral warm) ── */
-  --bg: #ECE7DC;                  /* papel washi envejecido — neutral cálido */
-  --surface: #F4EFE3;             /* cards: más claras que bg (efecto elevación) */
-  --surface2: #E0DAC9;             /* underlay: más oscuro para profundidad */
-  --surface-hover: #F8F3E7;
+  /* ── PRIMITIVE TOKENS — Stone gray + sumi + persimmon (neutral warm + darker) ── */
+  --bg: #BFB8AB;                   /* gris piedra cálido (ishi 石) */
+  --surface: #CFC8B9;              /* cards: más claras que bg (elevación) */
+  --surface2: #A89F90;             /* underlay: piedra más oscura */
+  --surface-hover: #C7C0B3;
   --accent: #FF6B35;               /* naranja persimmon (柿) — sin cambio */
-  --accent-soft: rgba(255, 107, 53, 0.10);
-  --accent-soft-strong: rgba(255, 107, 53, 0.20);
-  --accent-border: rgba(255, 107, 53, 0.32);
-  --accent2: #B91C1C;              /* rojo akai 赤 más oscuro para mejor contraste sobre beige */
-  --accent2-soft: rgba(185, 28, 28, 0.10);
-  --text: #1A1814;                 /* sumi cálido (no negro puro) */
-  --text-dim: #4A463E;
-  --muted: #6F6A60;
-  --subtle: #9C968A;
-  --border: #C8C1B0;
-  --border-strong: #A39C8A;
+  --accent-soft: rgba(255, 107, 53, 0.12);
+  --accent-soft-strong: rgba(255, 107, 53, 0.22);
+  --accent-border: rgba(255, 107, 53, 0.38);
+  --accent2: #9E1818;              /* rojo akai más profundo */
+  --accent2-soft: rgba(158, 24, 24, 0.10);
+  --text: #1A1814;                 /* sumi cálido */
+  --text-dim: #3F3A30;
+  --muted: #5A5448;
+  --subtle: #837C70;
+  --border: #968F80;
+  --border-strong: #75705F;
   --success: #15803D;
-  --danger: #B91C1C;
-  --info: #0369A1;
+  --danger: #9E1818;
+  --info: #075985;
 
   /* ── SEMANTIC TOKENS ── */
   --radius-sm: 8px;
