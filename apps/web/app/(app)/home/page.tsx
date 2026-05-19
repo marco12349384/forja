@@ -139,8 +139,9 @@ export default async function HomePage() {
     <div className="min-h-screen pb-24 sm:pb-8" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       {/* ════════ HERO HEADER con ambient japonés ════════ */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        {/* Fondo: sol rojo pulsante + ondas seigaiha */}
-        <JapaneseAmbient variant="combo" opacity={0.14} color="#9E1818" />
+        {/* Fondo: sol rojo gigante + ondas seigaiha visibles */}
+        <JapaneseAmbient variant="sun" opacity={0.28} position="top-right" color="#9E1818" />
+        <JapaneseAmbient variant="waves" opacity={0.18} color="#1A1814" />
         <div className="deco-text font-display" style={{ position: 'relative', zIndex: 1 }}>HOY</div>
         <div className="page-hero-content max-w-3xl relative" style={{ zIndex: 2 }}>
           <div className="page-hero-tag">⚡ {DAYS_ES_DISPLAY[todayName].toUpperCase()}</div>

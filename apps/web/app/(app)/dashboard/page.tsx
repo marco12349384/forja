@@ -99,8 +99,9 @@ export default async function DashboardPage() {
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       {/* ════════ HERO HEADER con ambient japonés ════════ */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        {/* Sol rojo gigante en esquina superior derecha */}
-        <JapaneseAmbient variant="sun" opacity={0.18} position="top-right" color="#9E1818" />
+        {/* Sol rojo gigante visible + kanji al fondo */}
+        <JapaneseAmbient variant="kanji" opacity={0.10} color="#1A1814" />
+        <JapaneseAmbient variant="sun" opacity={0.30} position="top-right" color="#9E1818" />
         <div className="deco-text font-display" style={{ position: 'relative', zIndex: 1 }}>STATS</div>
         <div className="page-hero-content max-w-4xl relative" style={{ zIndex: 2 }}>
           <div className="page-hero-tag">⚡ {MONTHS_ES[today.getMonth()].toUpperCase()} {today.getFullYear()}</div>

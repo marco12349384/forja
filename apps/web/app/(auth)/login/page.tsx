@@ -37,10 +37,9 @@ export default function LoginPage() {
       className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
       style={{ background: 'var(--bg)', color: 'var(--text)' }}
     >
-      {/* ════ Ambient japonés de fondo ════ */}
-      <JapaneseAmbient variant="sun" opacity={0.18} position="top-right" color="#9E1818" />
-      <JapaneseAmbient variant="waves" opacity={0.10} color="#9E1818" />
-      <JapaneseAmbient variant="fuji" opacity={0.08} color="#1A1814" />
+      {/* ════ Poster japonés: sol gigante + kanji 力 atrás + torii silueta ════ */}
+      <JapaneseAmbient variant="poster" opacity={0.35} color="#9E1818" />
+      <JapaneseAmbient variant="waves" opacity={0.22} color="#1A1814" />
 
       <div className="w-full max-w-md space-y-8 relative" style={{ zIndex: 10 }}>
         {/* HERO: Logo + nombre */}

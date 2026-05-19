@@ -11,8 +11,9 @@ export default async function BrandPage() {
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       {/* Hero con ambient japonés */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        {/* Bonsai + sol — más artístico para la página de brand */}
-        <JapaneseAmbient variant="bonsai" opacity={0.16} position="top-right" color="#9E1818" />
+        {/* Poster japonés cinematográfico */}
+        <JapaneseAmbient variant="bonsai" opacity={0.28} position="top-right" color="#9E1818" />
+        <JapaneseAmbient variant="kanji" opacity={0.08} color="#1A1814" />
         <div
           className="deco-text"
           style={{

@@ -64,8 +64,8 @@ export default async function ProgressPage() {
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       {/* ════════ HERO con ambient japonés ════════ */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        {/* Sol + ondas: representa el camino, el flujo del progreso */}
-        <JapaneseAmbient variant="combo" opacity={0.14} color="#9E1818" />
+        {/* Bonsai con sol — representa crecimiento, camino del progreso */}
+        <JapaneseAmbient variant="bonsai" opacity={0.30} position="top-right" color="#9E1818" />
         <div className="deco-text font-display" style={{ position: 'relative', zIndex: 1 }}>EVO</div>
         <div className="page-hero-content max-w-4xl relative" style={{ zIndex: 2 }}>
           <div className="page-hero-tag">⚡ ÚLTIMOS 30 DÍAS</div>
