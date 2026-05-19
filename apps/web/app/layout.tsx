@@ -6,6 +6,10 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'PULSO — Tu coach de fitness con IA',
   description: 'Tu app de fitness con coach IA personal',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

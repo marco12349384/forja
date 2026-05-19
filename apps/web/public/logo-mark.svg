@@ -1,0 +1,22 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PULSO logo">
+  <title>PULSO</title>
+  <!-- Enso (zen circle) — drawn in one stroke, slight imperfection at top-right opening -->
+  <path
+    d="M 72 12
+       A 42 42 0 1 0 87 47"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- Pulse line (heartbeat) crossing horizontally — interrupts the enso at one point -->
+  <path
+    d="M 14 50 L 30 50 L 36 40 L 44 62 L 50 50 L 86 50"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
