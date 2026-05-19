@@ -489,11 +489,11 @@ export default async function HomePage() {
                 tint: 'linear-gradient(180deg, rgba(167,139,250,0.15) 0%, rgba(0,0,0,0.78) 100%)',
               },
               {
-                href: '/settings',
-                name: 'Ajustes',
-                desc: 'Tema · cuenta',
+                href: '/regenerate-plan',
+                name: 'Cambiar Plan',
+                desc: 'Regenera con SOCIO',
                 img: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&h=600&fit=crop&auto=format&q=80',
-                tint: 'linear-gradient(180deg, rgba(56,189,248,0.15) 0%, rgba(0,0,0,0.78) 100%)',
+                tint: 'linear-gradient(180deg, rgba(232,255,71,0.18) 0%, rgba(0,0,0,0.78) 100%)',
               },
             ].map((a) => (
               <Link
