@@ -3,8 +3,12 @@ import Link from 'next/link';
 import { getActivePlan, getTodayWorkout } from '@forja/api-client';
 
 const DAYS_ES = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+const DAYS_ES_DISPLAY: Record<string, string> = {
+  domingo: 'Domingo', lunes: 'Lunes', martes: 'Martes',
+  miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
+};
 const WORKOUT_EMOJI: Record<string, string> = {
-  calistenia: '🤸', gym: '🏋️', cardio: '🏃', home: '🏠', yoga: '🧘', movilidad: '🔄',
+  calistenia: '🤸', gym: '🏋️', cardio: '🏃', home: '🏠', yoga: '🧘', movilidad: '🔄', pilates: '🧘‍♂️',
 };
 
 export default async function HomePage() {
@@ -19,76 +23,115 @@ export default async function HomePage() {
   const todayWorkout = plan ? await getTodayWorkout(plan.id, todayName) : null;
 
   return (
-    <div className="min-h-screen bg-black px-4 py-10 max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-zinc-400 text-sm">Bienvenido de vuelta</p>
-          <h1 className="text-2xl font-bold">{userName} 👋</h1>
+    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      {/* Hero header */}
+      <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
+        <div
+          aria-hidden
+          className="absolute font-display pointer-events-none select-none"
+          style={{
+            right: '-10px', top: '-30px',
+            fontSize: 'clamp(80px, 14vw, 180px)',
+            fontWeight: 800,
+            color: 'rgba(232,255,71,0.04)',
+            lineHeight: 1,
+          }}
+        >
+          HOY
         </div>
-        <span className="text-3xl">⚒️</span>
+        <div className="max-w-2xl mx-auto px-6 py-10 relative">
+          <div className="text-xs font-semibold tracking-[3px] uppercase mb-2" style={{ color: 'var(--accent)' }}>
+            ⚡ {DAYS_ES_DISPLAY[todayName]}
+          </div>
+          <h1 className="font-display leading-none" style={{ fontSize: 'clamp(36px, 8vw, 56px)', letterSpacing: '-0.03em' }}>
+            <span style={{ color: 'var(--text)' }}>HOLA,</span>{' '}
+            <span style={{ color: 'var(--accent)' }}>{userName.toUpperCase()}</span>
+          </h1>
+          {plan && (
+            <p className="text-sm mt-3" style={{ color: 'var(--muted)' }}>
+              Plan: <span style={{ color: 'var(--text)' }}>{plan.name}</span>
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Plan activo */}
-      {plan && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-6">
-          <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Plan activo</p>
-          <p className="font-semibold">{plan.name}</p>
-        </div>
-      )}
+      <div className="max-w-2xl mx-auto px-6 py-6 space-y-4">
 
-      {/* Workout de hoy */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3 capitalize">
-          Entrenamiento de hoy — {todayName}
-        </h2>
-
+        {/* Workout de hoy */}
         {todayWorkout ? (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-bold text-lg">{todayWorkout.name}</h3>
-                <p className="text-zinc-400 text-sm capitalize">
-                  {todayWorkout.type} · {todayWorkout.estimated_duration_min} min · {todayWorkout.difficulty}
-                </p>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div className="p-5">
+              <div className="text-[10px] uppercase tracking-[2px] mb-2" style={{ color: 'var(--accent)' }}>
+                Tu entreno de hoy
               </div>
-              <span className="text-2xl">{WORKOUT_EMOJI[todayWorkout.type] ?? '⚡'}</span>
-            </div>
-
-            <div className="space-y-2">
-              {todayWorkout.exercises?.slice(0, 5).map((ex: any, i: number) => (
-                <div key={ex.id} className="flex items-center gap-3 text-sm">
-                  <span className="text-orange-400 font-bold w-5">{i + 1}</span>
-                  <span className="flex-1">{ex.catalog?.name}</span>
-                  <span className="text-zinc-400">{ex.sets}×{ex.reps}</span>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-display text-2xl" style={{ fontWeight: 800 }}>{todayWorkout.name}</h3>
+                  <p className="text-sm mt-1 capitalize" style={{ color: 'var(--muted)' }}>
+                    {todayWorkout.type} · {todayWorkout.estimated_duration_min} min · {todayWorkout.difficulty}
+                  </p>
                 </div>
-              ))}
-              {(todayWorkout.exercises?.length ?? 0) > 5 && (
-                <p className="text-zinc-500 text-sm pl-8">
-                  +{(todayWorkout.exercises?.length ?? 0) - 5} ejercicios más
-                </p>
-              )}
-            </div>
+                <span className="text-3xl">{WORKOUT_EMOJI[todayWorkout.type] ?? '⚡'}</span>
+              </div>
 
-            <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-colors">
-              Iniciar entrenamiento →
-            </button>
+              {/* Exercise preview */}
+              <div className="space-y-1.5 mb-5">
+                {todayWorkout.exercises?.slice(0, 5).map((ex: any, i: number) => (
+                  <div
+                    key={ex.id}
+                    className="flex items-center gap-3 p-2 rounded-lg text-sm"
+                    style={{ background: 'var(--surface2)' }}
+                  >
+                    <span
+                      className="w-6 h-6 rounded-md flex items-center justify-center font-display text-xs"
+                      style={{ background: 'rgba(232,255,71,0.1)', color: 'var(--accent)', fontWeight: 800 }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 truncate">{ex.catalog?.name}</span>
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full font-display"
+                      style={{ background: 'var(--accent)', color: '#000', fontWeight: 700 }}
+                    >
+                      {ex.sets}×{ex.reps}
+                    </span>
+                  </div>
+                ))}
+                {(todayWorkout.exercises?.length ?? 0) > 5 && (
+                  <p className="text-xs pl-2" style={{ color: 'var(--muted)' }}>
+                    +{(todayWorkout.exercises?.length ?? 0) - 5} ejercicios más al abrir
+                  </p>
+                )}
+              </div>
+
+              {/* CTA button */}
+              <Link
+                href={`/workout/${todayWorkout.id}`}
+                className="w-full py-4 rounded-xl font-display flex items-center justify-center"
+                style={{ background: 'var(--accent)', color: '#000', fontWeight: 800, fontSize: '15px' }}
+              >
+                ▶ Iniciar entrenamiento
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
+          <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             {plan ? (
               <>
-                <p className="text-4xl mb-3">🧘</p>
-                <p className="font-semibold">Día de descanso</p>
-                <p className="text-zinc-400 text-sm mt-1">Tu cuerpo también se forja descansando</p>
+                <p className="text-5xl mb-3">🧘</p>
+                <p className="font-display text-xl" style={{ fontWeight: 700 }}>Día de descanso</p>
+                <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>
+                  Tu cuerpo también se forja descansando
+                </p>
               </>
             ) : (
               <>
-                <p className="text-4xl mb-3">⚒️</p>
-                <p className="font-semibold">Sin plan activo</p>
+                <p className="text-5xl mb-3">⚡</p>
+                <p className="font-display text-xl" style={{ fontWeight: 700 }}>Sin plan activo</p>
                 <Link
                   href="/onboarding"
-                  className="inline-block mt-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-xl text-sm transition-colors"
+                  className="inline-block mt-4 px-6 py-2.5 rounded-xl font-display text-sm"
+                  style={{ background: 'var(--accent)', color: '#000', fontWeight: 800 }}
                 >
                   Crear mi plan con IA
                 </Link>
@@ -96,30 +139,46 @@ export default async function HomePage() {
             )}
           </div>
         )}
-      </div>
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/coach" className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-orange-500 transition-colors block">
-          <p className="text-2xl mb-2">💬</p>
-          <p className="font-semibold text-sm">Coach Forja</p>
-          <p className="text-zinc-400 text-xs">Pregúntame lo que sea</p>
-        </Link>
-        <Link href="/progress" className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-orange-500 transition-colors block">
-          <p className="text-2xl mb-2">📈</p>
-          <p className="font-semibold text-sm">Mi progreso</p>
-          <p className="text-zinc-400 text-xs">Ver estadísticas</p>
-        </Link>
-        <Link href="/catalog" className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-orange-500 transition-colors block">
-          <p className="text-2xl mb-2">📚</p>
-          <p className="font-semibold text-sm">Catálogo</p>
-          <p className="text-zinc-400 text-xs">Ejercicios con videos</p>
-        </Link>
-        <Link href="/nutrition" className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-orange-500 transition-colors block">
-          <p className="text-2xl mb-2">🥗</p>
-          <p className="font-semibold text-sm">Nutrición</p>
-          <p className="text-zinc-400 text-xs">Registrar comidas</p>
-        </Link>
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            href="/dashboard"
+            className="rounded-2xl p-4 transition-colors"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
+            <p className="text-2xl mb-2">📊</p>
+            <p className="font-display text-sm" style={{ fontWeight: 700 }}>Dashboard</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>SOCIO Score + macros</p>
+          </Link>
+          <Link
+            href="/progress"
+            className="rounded-2xl p-4 transition-colors"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
+            <p className="text-2xl mb-2">📈</p>
+            <p className="font-display text-sm" style={{ fontWeight: 700 }}>Progreso</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>30 días + timeline</p>
+          </Link>
+          <Link
+            href="/library"
+            className="rounded-2xl p-4 transition-colors"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
+            <p className="text-2xl mb-2">📚</p>
+            <p className="font-display text-sm" style={{ fontWeight: 700 }}>Biblioteca</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Ejercicios</p>
+          </Link>
+          <Link
+            href="/settings"
+            className="rounded-2xl p-4 transition-colors"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
+            <p className="text-2xl mb-2">⚙️</p>
+            <p className="font-display text-sm" style={{ fontWeight: 700 }}>Ajustes</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Tema · cuenta</p>
+          </Link>
+        </div>
       </div>
     </div>
   );
