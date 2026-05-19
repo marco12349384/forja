@@ -10,7 +10,6 @@ export default async function SettingsPage() {
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       <div className="border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="max-w-4xl mx-auto px-6 py-8">
-          <a href="/home" className="btn-back mb-4">← Inicio</a>
           <div className="text-xs font-semibold tracking-[3px] uppercase mb-2" style={{ color: 'var(--accent)' }}>
             ⚡ Configuración
           </div>

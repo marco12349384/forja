@@ -150,11 +150,6 @@ export default async function DashboardPage() {
             FIT
           </div>
 
-          {/* Back to home */}
-          <a href="/home" className="btn-back mb-4">
-            ← Inicio
-          </a>
-
           <div className="text-xs font-semibold tracking-[3px] uppercase mb-2" style={{ color: 'var(--accent)' }}>
             ⚡ Tu plan personal · {MONTHS_ES[today.getMonth()]} {today.getFullYear()}
           </div>
