@@ -129,12 +129,7 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
       {/* Header */}
       <div className="border-b sticky top-0 z-10" style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <button
-            onClick={() => router.push('/home')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex-shrink-0"
-            style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)' }}
-            aria-label="Volver al inicio"
-          >
+          <button onClick={() => router.push('/home')} className="btn-back flex-shrink-0" aria-label="Volver al inicio">
             ← Inicio
           </button>
           <div className="flex-1 min-w-0 text-center">
@@ -317,25 +312,19 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
 
         {/* Action buttons */}
         <div className="flex gap-3 sticky bottom-0 pb-4 pt-4" style={{ background: 'var(--bg)' }}>
-          <button
-            onClick={() => router.push('/home')}
-            disabled={submitting}
-            className="flex-1 py-3 rounded-xl font-semibold"
-            style={{ background: 'var(--surface)', color: 'var(--muted)', border: '1px solid var(--border)' }}
-          >
+          <button onClick={() => router.push('/home')} disabled={submitting} className="btn btn-secondary flex-1">
             Cancelar
           </button>
           <button
             onClick={handleFinish}
             disabled={submitting}
-            className="flex-[2] py-3 rounded-xl font-display"
+            className="btn flex-[2]"
             style={{
-              background: pct === 100 ? '#22c55e' : 'var(--accent)',
+              background: pct === 100 ? 'var(--success)' : 'var(--accent)',
               color: '#000',
-              fontWeight: 800,
               fontSize: '15px',
-              opacity: submitting ? 0.6 : 1,
             }}
+            aria-label={pct === 100 ? 'Terminar entrenamiento — completado' : 'Terminar entrenamiento'}
           >
             {submitting ? 'Guardando...' : pct === 100 ? '🎉 Terminar entreno' : 'Terminar entreno →'}
           </button>

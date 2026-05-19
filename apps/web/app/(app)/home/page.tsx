@@ -107,8 +107,8 @@ export default async function HomePage() {
               {/* CTA button */}
               <Link
                 href={`/workout/${todayWorkout.id}`}
-                className="w-full py-4 rounded-xl font-display flex items-center justify-center"
-                style={{ background: 'var(--accent)', color: '#000', fontWeight: 800, fontSize: '15px' }}
+                className="btn btn-primary w-full text-base"
+                style={{ fontSize: '15px', minHeight: 52 }}
               >
                 ▶ Iniciar entrenamiento
               </Link>
@@ -128,11 +128,7 @@ export default async function HomePage() {
               <>
                 <p className="text-5xl mb-3">⚡</p>
                 <p className="font-display text-xl" style={{ fontWeight: 700 }}>Sin plan activo</p>
-                <Link
-                  href="/onboarding"
-                  className="inline-block mt-4 px-6 py-2.5 rounded-xl font-display text-sm"
-                  style={{ background: 'var(--accent)', color: '#000', fontWeight: 800 }}
-                >
+                <Link href="/onboarding" className="btn btn-primary mt-4 inline-flex">
                   Crear mi plan con IA
                 </Link>
               </>
@@ -142,42 +138,18 @@ export default async function HomePage() {
 
         {/* Quick actions */}
         <div className="grid grid-cols-2 gap-3">
-          <Link
-            href="/dashboard"
-            className="rounded-2xl p-4 transition-colors"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-          >
-            <p className="text-2xl mb-2">📊</p>
-            <p className="font-display text-sm" style={{ fontWeight: 700 }}>Dashboard</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>SOCIO Score + macros</p>
-          </Link>
-          <Link
-            href="/progress"
-            className="rounded-2xl p-4 transition-colors"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-          >
-            <p className="text-2xl mb-2">📈</p>
-            <p className="font-display text-sm" style={{ fontWeight: 700 }}>Progreso</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>30 días + timeline</p>
-          </Link>
-          <Link
-            href="/library"
-            className="rounded-2xl p-4 transition-colors"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-          >
-            <p className="text-2xl mb-2">📚</p>
-            <p className="font-display text-sm" style={{ fontWeight: 700 }}>Biblioteca</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Ejercicios</p>
-          </Link>
-          <Link
-            href="/settings"
-            className="rounded-2xl p-4 transition-colors"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-          >
-            <p className="text-2xl mb-2">⚙️</p>
-            <p className="font-display text-sm" style={{ fontWeight: 700 }}>Ajustes</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Tema · cuenta</p>
-          </Link>
+          {[
+            { href: '/dashboard', emoji: '📊', name: 'Dashboard', desc: 'SOCIO Score + macros' },
+            { href: '/progress',  emoji: '📈', name: 'Progreso',  desc: '30 días + timeline' },
+            { href: '/library',   emoji: '📚', name: 'Biblioteca', desc: 'Ejercicios catalogados' },
+            { href: '/settings',  emoji: '⚙️', name: 'Ajustes',    desc: 'Tema · cuenta' },
+          ].map((a) => (
+            <Link key={a.href} href={a.href} className="card card-interactive p-4 block" aria-label={a.name}>
+              <p className="text-2xl mb-2" aria-hidden>{a.emoji}</p>
+              <p className="font-display text-sm" style={{ fontWeight: 700 }}>{a.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{a.desc}</p>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

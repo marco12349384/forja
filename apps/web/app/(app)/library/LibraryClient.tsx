@@ -72,11 +72,7 @@ export default function LibraryClient({ exercises }: { exercises: Exercise[] }) 
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {filtered.map((ex) => (
-            <div
-              key={ex.id}
-              className="rounded-2xl p-4"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-            >
+            <div key={ex.id} className="card card-interactive p-4">
               {/* Type chip */}
               <span
                 className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider inline-block"

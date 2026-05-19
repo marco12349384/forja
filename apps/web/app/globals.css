@@ -3,22 +3,78 @@
 @tailwind utilities;
 
 :root {
+  /* ── PRIMITIVE TOKENS ── */
   --bg: #0d0d0d;
   --surface: #161616;
   --surface2: #1f1f1f;
+  --surface-hover: #1c1c1c;
   --accent: #e8ff47;
+  --accent-soft: rgba(232, 255, 71, 0.1);
+  --accent-soft-strong: rgba(232, 255, 71, 0.18);
+  --accent-border: rgba(232, 255, 71, 0.25);
   --accent2: #ff6b35;
+  --accent2-soft: rgba(255, 107, 53, 0.12);
   --text: #f0f0f0;
-  --muted: #666666;
+  --text-dim: #b8b8b8;
+  --muted: #888888;
+  --subtle: #555555;
   --border: #252525;
+  --border-strong: #353535;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --info: #38bdf8;
+
+  /* ── SEMANTIC TOKENS ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── MOTION ── */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html, body {
   background: var(--bg);
   color: var(--text);
   font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus-visible: keyboard-only focus rings (better than browser default) */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 3px;
+}
+
+/* ── TYPOGRAPHY ── */
 .font-display {
   font-family: 'Syne', system-ui, sans-serif;
   font-weight: 800;
@@ -29,30 +85,246 @@ html, body {
   font-family: 'Instrument Sans', system-ui, sans-serif;
 }
 
-/* Custom utility classes for the new design */
+/* Tabular numbers for stats */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── COLOR UTILITIES ── */
 .bg-surface { background-color: var(--surface); }
 .bg-surface2 { background-color: var(--surface2); }
 .bg-accent { background-color: var(--accent); }
-.bg-accent-soft { background-color: rgba(232, 255, 71, 0.1); }
-.bg-accent2-soft { background-color: rgba(255, 107, 53, 0.1); }
+.bg-accent-soft { background-color: var(--accent-soft); }
+.bg-accent2-soft { background-color: var(--accent2-soft); }
 .text-accent { color: var(--accent); }
 .text-accent2 { color: var(--accent2); }
 .text-muted { color: var(--muted); }
+.text-dim { color: var(--text-dim); }
 .border-default { border-color: var(--border); }
+.border-strong { border-color: var(--border-strong); }
 
-/* Pill component utility */
+/* ── COMPONENT CLASSES ── */
+
+/* Pills (badges/tags) */
 .pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 5px 12px;
   font-size: 11px;
   font-weight: 600;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--muted);
+  white-space: nowrap;
 }
 .pill-hi {
-  background: rgba(232, 255, 71, 0.1);
-  border-color: rgba(232, 255, 71, 0.25);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
   color: var(--accent);
 }
+.pill-warm {
+  background: var(--accent2-soft);
+  border-color: rgba(255,107,53,0.25);
+  color: var(--accent2);
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  transition: border-color var(--duration-base) var(--ease-out),
+              background var(--duration-base) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+
+/* Interactive cards (clickable) */
+.card-interactive {
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-out);
+}
+.card-interactive:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+}
+.card-interactive:active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-family: 'Syne', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+  min-height: 44px;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #d8ef34;
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text-dim);
+  border-color: var(--border);
+}
+.btn-ghost:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  transition: all var(--duration-fast) var(--ease-out);
+  min-height: 36px;
+}
+.btn-back:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+.btn-back:active {
+  transform: scale(0.97);
+}
+
+/* Page hero header — consistent across all pages */
+.page-hero {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.page-hero-content {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 2rem;
+  position: relative;
+}
+.page-hero h1 {
+  font-family: 'Syne', system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-size: clamp(32px, 7vw, 56px);
+}
+.page-hero-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+/* Decorative background text */
+.deco-text {
+  position: absolute;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  pointer-events: none;
+  user-select: none;
+  color: rgba(232,255,71,0.04);
+  line-height: 1;
+  right: -10px;
+  top: -20px;
+  font-size: clamp(80px, 14vw, 180px);
+}
+
+/* Stats display */
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Sets/reps pill (workout) */
+.set-pill {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #000;
+  white-space: nowrap;
+}
+
+/* Mobile-first spacing */
+.page-content {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+@media (min-width: 640px) {
+  .page-content { padding: 1.5rem 1.5rem; }
+  .page-hero-content { padding: 2rem 1.5rem 2.5rem; }
+}
+
+/* Skeleton loader (for future use) */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    var(--surface2) 50%,
+    var(--surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Smooth scroll for in-page links */
+html { scroll-behavior: smooth; }
+
+/* Safe area awareness */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-top { padding-top: env(safe-area-inset-top); }

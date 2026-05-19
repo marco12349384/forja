@@ -151,11 +151,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Back to home */}
-          <a
-            href="/home"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold mb-4"
-            style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)' }}
-          >
+          <a href="/home" className="btn-back mb-4">
             ← Inicio
           </a>
 
