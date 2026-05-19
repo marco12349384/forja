@@ -1,9 +1,5 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PULSO — Monte Fuji con sol naciente">
   <title>PULSO</title>
-  <!-- Sol naciente en amarillo accent -->
-  <circle cx="68" cy="28" r="13" fill="#E8FF47"/>
-  <!-- Monte Fuji blanco -->
-  <path d="M 8 85 L 38 38 L 44 46 L 48 41 L 52 41 L 56 46 L 62 38 L 92 85 Z" fill="#F0F0F0"/>
-  <!-- Línea de horizonte sutil -->
-  <line x1="6" y1="86" x2="94" y2="86" stroke="#F0F0F0" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <circle cx="55" cy="38" r="20" fill="#E8FF47"/>
+  <path d="M 8 84 L 40 34 L 44 39 L 48 36 L 52 39 L 56 36 L 60 34 L 92 84 Z" fill="#F0F0F0"/>
 </svg>

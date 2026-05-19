@@ -1,28 +1,21 @@
 /**
  * PulsoLogo — Logo oficial de PULSO
  *
- * Concepto: 富士山 (Fuji-san) + 日の出 (hi-no-de, sol naciente)
- * - Monte Fuji = el camino, la cumbre, la disciplina
- * - Sol naciente = energía, nuevo día, el latido (pulso) del despertar
- *
- * Inspirado en la estética minimalista japonesa: Hokusai, Muji, Issey Miyake.
+ * Concepto refinado: 富士山 (Fuji-san) + 日の出 (hi-no-de, sol naciente)
+ * El sol está parcialmente detrás del Monte Fuji — efecto cinematográfico de amanecer.
  *
  * Variantes:
- *   - "mark"     → solo el símbolo (Fuji + sol). Cuadrado.
- *   - "full"     → símbolo + wordmark PULSO + furigana 力 (chikara/strength)
+ *   - "mark"     → solo el símbolo. Cuadrado.
+ *   - "full"     → símbolo + wordmark PULSO + kanji 力 (chikara/strength)
  *   - "wordmark" → solo el texto PULSO
  */
 
 interface Props {
   variant?: 'mark' | 'full' | 'wordmark';
   size?: number;
-  /** Color del Fuji (montaña). Default: blanco */
   mountainColor?: string;
-  /** Color del sol. Default: accent yellow */
   sunColor?: string;
-  /** Color del wordmark. Default: blanco */
   textColor?: string;
-  /** Mostrar kanji 力 al lado del wordmark */
   showKanji?: boolean;
   className?: string;
 }
@@ -36,7 +29,7 @@ export function PulsoLogo({
   showKanji = true,
   className,
 }: Props) {
-  // ── MARK SVG (Fuji + sol) ─────────────────────────────────────
+  // ── MARK SVG (Fuji + sol naciente, sol detrás de la montaña) ──
   const Mark = (
     <svg
       viewBox="0 0 100 100"
@@ -47,30 +40,27 @@ export function PulsoLogo({
       role="img"
       aria-label="PULSO — Monte Fuji con sol naciente"
     >
-      {/* Sol naciente — círculo arriba-derecha (rising sun) */}
+      {/* Sol naciente — grande, posición central-alta. El Fuji lo cubre parcialmente. */}
       <circle
-        cx="68"
-        cy="28"
-        r="13"
+        cx="55"
+        cy="38"
+        r="20"
         fill={sunColor}
       />
 
-      {/* Monte Fuji — silueta con pico nevado estilizado */}
+      {/* Monte Fuji — silueta elegante con snow cap sutil de 5 puntos */}
       <path
-        d="M 8 85
-           L 38 38
-           L 44 46
-           L 48 41
-           L 52 41
-           L 56 46
-           L 62 38
-           L 92 85
+        d="M 8 84
+           L 40 34
+           L 44 39
+           L 48 36
+           L 52 39
+           L 56 36
+           L 60 34
+           L 92 84
            Z"
         fill={mountainColor}
       />
-
-      {/* Línea de horizonte / base sutil (opcional) */}
-      <line x1="6" y1="86" x2="94" y2="86" stroke={mountainColor} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
     </svg>
   );
 
@@ -96,16 +86,17 @@ export function PulsoLogo({
     </span>
   );
 
-  // Japanese kanji — 力 (chikara = strength/power)
+  // Kanji 力 (chikara · fuerza) — más sutil, integrado como acento
   const Kanji = showKanji && (
     <span
       style={{
-        fontSize: Math.round(size * 0.42),
+        fontSize: Math.round(size * 0.36),
         fontWeight: 700,
         color: typeof sunColor === 'string' && sunColor.startsWith('var(') ? 'var(--accent)' : sunColor,
         lineHeight: 1,
         fontFamily: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
-        opacity: 0.9,
+        opacity: 0.85,
+        marginLeft: '-2px',
       }}
       aria-hidden
       title="力 chikara · fuerza"
@@ -127,10 +118,10 @@ export function PulsoLogo({
   return (
     <span
       className={className}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.22 }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.24 }}
     >
       {Mark}
-      <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: size * 0.16 }}>
+      <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: size * 0.15 }}>
         {Wordmark}
         {Kanji}
       </span>
