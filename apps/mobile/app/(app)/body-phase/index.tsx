@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { PressableScale } from '@/components/PressableScale';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { apiCall } from '@/lib/api';
 import { spacing, radius, shadows } from '@/design/tokens';
 import { useTheme } from '@/design/ThemeContext';
@@ -180,7 +180,30 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export default function BodyPhaseScreen() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const { signOut } = useClerk();
   const { colors, mode, setMode } = useTheme();
+
+  async function handleSignOut() {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Seguro que quieres salir de PULSO?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace('/(auth)/login');
+            } catch (e) {
+              Alert.alert('Error', 'No se pudo cerrar sesión. Intenta de nuevo.');
+            }
+          },
+        },
+      ],
+    );
+  }
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -609,6 +632,54 @@ export default function BodyPhaseScreen() {
                 );
               })}
             </View>
+          </View>
+
+          {/* ── Cuenta (sign out) ── */}
+          <View
+            style={[
+              {
+                backgroundColor: colors.surface,
+                borderRadius: radius.lg,
+                padding: spacing.lg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                marginTop: spacing.md,
+                gap: spacing.md,
+              },
+              shadows.card,
+            ]}
+          >
+            <Text
+              style={{
+                fontFamily: 'PlayfairDisplay_700Bold',
+                fontSize: 18,
+                color: colors.text,
+              }}
+            >
+              Cuenta
+            </Text>
+            <PressableScale
+              onPress={handleSignOut}
+              style={{
+                paddingVertical: spacing.md,
+                paddingHorizontal: spacing.lg,
+                borderRadius: radius.md,
+                borderWidth: 1.5,
+                borderColor: colors.error,
+                backgroundColor: `${colors.error}15`,
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: 'DMSans_700Bold',
+                  fontSize: 14,
+                  color: colors.error,
+                }}
+              >
+                Cerrar sesión
+              </Text>
+            </PressableScale>
           </View>
 
           {/* ── Recovery mode ── */}

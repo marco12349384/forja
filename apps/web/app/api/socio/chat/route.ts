@@ -13,7 +13,7 @@ const MAX_HISTORY_ITEMS = 10;
 const STREAK_LOOKBACK_DAYS = 60;
 const MODEL_TIMEOUT_MS = 30_000;
 const MAX_TOKENS = 800;
-const CLAUDE_MODEL = 'claude-3-5-sonnet-latest';
+const CLAUDE_MODEL = 'claude-sonnet-4-5';
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
 import { NavThemeToggle } from './_components/NavThemeToggle';
+import { NavSignOut } from './_components/NavSignOut';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { userId } = await auth();
@@ -15,7 +16,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <a href="/progress" className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Progreso</a>
         <a href="/library" className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Biblioteca</a>
         <a href="/settings" className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Ajustes</a>
-        <NavThemeToggle />
+        <div className="ml-auto flex items-center gap-2">
+          <NavThemeToggle />
+          <NavSignOut />
+        </div>
       </nav>
       <main>{children}</main>
     </div>
