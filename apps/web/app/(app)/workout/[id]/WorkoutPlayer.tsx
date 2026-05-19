@@ -129,18 +129,26 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
       {/* Header */}
       <div className="border-b sticky top-0 z-10" style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <div>
-            <div className="text-[10px] tracking-[2px] uppercase" style={{ color: 'var(--muted)' }}>
+          <button
+            onClick={() => router.push('/home')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex-shrink-0"
+            style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)' }}
+            aria-label="Volver al inicio"
+          >
+            ← Inicio
+          </button>
+          <div className="flex-1 min-w-0 text-center">
+            <div className="text-[10px] tracking-[2px] uppercase truncate" style={{ color: 'var(--muted)' }}>
               {workout.day_of_week} · {workout.difficulty}
             </div>
-            <h1 className="font-display text-xl" style={{ fontWeight: 800 }}>
+            <h1 className="font-display text-base sm:text-lg truncate" style={{ fontWeight: 800 }}>
               {TYPE_EMOJI[workout.type] ?? '⚡'} {workout.name}
             </h1>
           </div>
-          <div className="text-right">
+          <div className="text-right flex-shrink-0">
             <div className="font-display text-2xl" style={{ fontWeight: 800, color: 'var(--accent)' }}>{pct}%</div>
             <div className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
-              {doneSets}/{totalSets} sets
+              {doneSets}/{totalSets}
             </div>
           </div>
         </div>
