@@ -7,9 +7,21 @@ export default async function SettingsPage() {
   if (!userId) redirect('/login');
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-8">Ajustes</h1>
-      <SettingsClient />
+    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      <div className="border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="text-xs font-semibold tracking-[3px] uppercase mb-2" style={{ color: 'var(--accent)' }}>
+            ⚡ Configuración
+          </div>
+          <h1 className="font-display leading-none" style={{ fontSize: 'clamp(36px, 7vw, 56px)', letterSpacing: '-0.03em' }}>
+            <span style={{ color: 'var(--text)' }}>AJUSTES</span>
+          </h1>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-6 py-8">
+        <SettingsClient />
+      </div>
     </div>
   );
 }

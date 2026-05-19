@@ -8,14 +8,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!userId) redirect('/login');
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 dark:bg-black dark:text-white">
-      <nav className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-6">
-        <span className="font-bold text-violet-600 dark:text-violet-400 mr-4">PULSO</span>
-        <a href="/home" className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Inicio</a>
-        <a href="/dashboard" className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Dashboard</a>
-        <a href="/progress" className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Progreso</a>
-        <a href="/library" className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Biblioteca</a>
-        <a href="/settings" className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">Ajustes</a>
+    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      <nav
+        className="border-b px-4 py-3 flex items-center gap-6"
+        style={{ borderColor: 'var(--border)', background: 'linear-gradient(180deg, #0d0d0d 0%, #111 100%)' }}
+      >
+        <span className="font-display text-2xl mr-4" style={{ color: 'var(--accent)' }}>
+          PULSO
+        </span>
+        <a href="/home" className="text-sm transition-colors hover:opacity-100" style={{ color: 'var(--muted)' }}>Inicio</a>
+        <a href="/dashboard" className="text-sm transition-colors hover:opacity-100" style={{ color: 'var(--muted)' }}>Dashboard</a>
+        <a href="/progress" className="text-sm transition-colors hover:opacity-100" style={{ color: 'var(--muted)' }}>Progreso</a>
+        <a href="/library" className="text-sm transition-colors hover:opacity-100" style={{ color: 'var(--muted)' }}>Biblioteca</a>
+        <a href="/settings" className="text-sm transition-colors hover:opacity-100" style={{ color: 'var(--muted)' }}>Ajustes</a>
         <div className="ml-auto flex items-center gap-2">
           <NavThemeToggle />
           <NavSignOut />

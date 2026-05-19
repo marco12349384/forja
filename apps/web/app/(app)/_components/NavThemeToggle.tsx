@@ -11,7 +11,12 @@ export function NavThemeToggle() {
     <button
       onClick={cycle}
       title={`Tema: ${mode}`}
-      className="px-3 py-1 rounded-lg text-sm bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 transition-colors"
+      className="px-3 py-1.5 rounded-lg text-sm transition-colors"
+      style={{
+        background: 'var(--surface2)',
+        color: 'var(--text)',
+        border: '1px solid var(--border)',
+      }}
     >
       {label}
     </button>

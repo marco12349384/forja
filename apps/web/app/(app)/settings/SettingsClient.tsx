@@ -11,23 +11,29 @@ export function SettingsClient() {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-4">Apariencia</h2>
-      <div className="grid grid-cols-3 gap-3">
-        {options.map((o) => (
-          <button
-            key={o.value}
-            onClick={() => setMode(o.value)}
-            className={
-              mode === o.value
-                ? 'px-4 py-3 rounded-xl bg-violet-600 text-white font-medium transition-all'
-                : 'px-4 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:border-violet-500 transition-all'
-            }
-          >
-            {o.label}
-          </button>
-        ))}
+      <h2 className="font-display text-xl mb-4" style={{ fontWeight: 700 }}>
+        Apariencia
+      </h2>
+      <div className="grid grid-cols-3 gap-2">
+        {options.map((o) => {
+          const active = mode === o.value;
+          return (
+            <button
+              key={o.value}
+              onClick={() => setMode(o.value)}
+              className="px-4 py-3 rounded-xl font-semibold transition-all"
+              style={{
+                background: active ? 'var(--accent)' : 'var(--surface)',
+                color: active ? '#000' : 'var(--text)',
+                border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+              }}
+            >
+              {o.label}
+            </button>
+          );
+        })}
       </div>
-      <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="mt-4 text-sm" style={{ color: 'var(--muted)' }}>
         El modo Sistema usa la preferencia de tu dispositivo automáticamente.
       </p>
     </section>

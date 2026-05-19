@@ -16,19 +16,23 @@ export default async function LibraryPage() {
       ORDER BY type, name
     `;
     exercises = rows as unknown as Exercise[];
-  } catch (_) {
-    // fail open — table may not exist yet
-  }
+  } catch (_) {}
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
-      <div className="max-w-4xl mx-auto px-4 py-10">
-
-        {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Biblioteca de Ejercicios</h1>
+    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      <div className="border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="text-xs font-semibold tracking-[3px] uppercase mb-2" style={{ color: 'var(--accent)' }}>
+            ⚡ {exercises.length} ejercicios catalogados
+          </div>
+          <h1 className="font-display leading-none" style={{ fontSize: 'clamp(36px, 7vw, 56px)', letterSpacing: '-0.03em' }}>
+            <span style={{ color: 'var(--text)' }}>BIBLIO</span>
+            <span style={{ color: 'var(--accent)' }}>TECA</span>
+          </h1>
         </div>
+      </div>
 
+      <div className="max-w-4xl mx-auto px-6 py-8">
         <LibraryClient exercises={exercises} />
       </div>
     </div>

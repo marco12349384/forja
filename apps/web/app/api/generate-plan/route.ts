@@ -149,10 +149,28 @@ export async function POST(req: Request) {
         const weekId = weekRows[0].id;
 
         for (const workout of week.workouts) {
+          // Normalize day_of_week — DB CHECK expects no accents (miercoles, sabado)
+          const dayMap: Record<string, string> = {
+            'lunes': 'lunes', 'martes': 'martes',
+            'miércoles': 'miercoles', 'miercoles': 'miercoles',
+            'jueves': 'jueves', 'viernes': 'viernes',
+            'sábado': 'sabado', 'sabado': 'sabado',
+            'domingo': 'domingo',
+          };
+          const normalizedDay = dayMap[String(workout.day_of_week ?? '').toLowerCase().trim()] ?? 'lunes';
+
+          // Normalize type — DB CHECK expects specific values
+          const validTypes = new Set(['gym', 'home', 'cardio', 'calistenia', 'yoga', 'movilidad']);
+          const normalizedType = validTypes.has(workout.type) ? workout.type : 'home';
+
+          // Normalize difficulty
+          const validDifficulty = new Set(['principiante', 'intermedio', 'avanzado']);
+          const normalizedDifficulty = validDifficulty.has(workout.difficulty) ? workout.difficulty : 'intermedio';
+
           const workoutRows = await tx`
             INSERT INTO workouts (plan_week_id, day_of_week, name, type, estimated_duration_min, difficulty)
-            VALUES (${weekId}, ${workout.day_of_week}, ${workout.name}, ${workout.type},
-                    ${workout.estimated_duration_min}, ${workout.difficulty})
+            VALUES (${weekId}, ${normalizedDay}, ${workout.name}, ${normalizedType},
+                    ${workout.estimated_duration_min}, ${normalizedDifficulty})
             RETURNING id
           `;
           const workoutId = workoutRows[0].id;

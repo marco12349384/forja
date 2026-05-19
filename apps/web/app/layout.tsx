@@ -12,7 +12,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <ClerkProvider>
       <html lang="es" className="dark">
-        <body className="bg-white text-zinc-900 dark:bg-black dark:text-white min-h-screen antialiased">
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Instrument+Sans:wght@400;500;600&display=swap"
+            rel="stylesheet"
+          />
+        </head>
+        <body className="min-h-screen antialiased font-body" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
           <ThemeProvider>
             {children}
           </ThemeProvider>

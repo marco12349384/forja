@@ -17,7 +17,22 @@ export function NavSignOut() {
     <button
       onClick={handleSignOut}
       title="Cerrar sesión"
-      className="px-3 py-1 rounded-lg text-sm bg-zinc-100 text-zinc-700 hover:bg-red-100 hover:text-red-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-900/40 dark:hover:text-red-300 transition-colors"
+      className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+      style={{
+        background: 'var(--surface2)',
+        color: 'var(--muted)',
+        border: '1px solid var(--border)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'rgba(255,107,53,0.15)';
+        e.currentTarget.style.color = 'var(--accent2)';
+        e.currentTarget.style.borderColor = 'var(--accent2)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'var(--surface2)';
+        e.currentTarget.style.color = 'var(--muted)';
+        e.currentTarget.style.borderColor = 'var(--border)';
+      }}
     >
       Cerrar sesión
     </button>

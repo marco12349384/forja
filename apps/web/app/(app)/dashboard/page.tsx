@@ -17,15 +17,7 @@ function formatDateES(date: Date): string {
   const day = DAYS_ES_FULL[date.getDay()];
   const d = date.getDate();
   const month = MONTHS_ES[date.getMonth()];
-  const year = date.getFullYear();
-  return `${day} ${d} de ${month} de ${year}`;
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Buenos días';
-  if (hour < 20) return 'Buenas tardes';
-  return 'Buenas noches';
+  return `${day} ${d} de ${month}`;
 }
 
 interface SocioScore {
@@ -37,10 +29,7 @@ interface SocioScore {
   narrative: string | null;
 }
 
-interface EnergyCheckin {
-  date: string;
-  energy_level: number;
-}
+interface EnergyCheckin { date: string; energy_level: number; }
 
 interface DailyNutrition {
   kcal_consumed: number;
@@ -54,63 +43,47 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  // Fix 1: Wrap currentUser() in try/catch
   let userName = 'Atleta';
   try {
     const user = await currentUser();
     userName = user?.firstName ?? 'Atleta';
-  } catch {
-    // fall through to default
-  }
+  } catch {}
 
   const sql = getDb();
-
-  // Fix 2: Resolve internal DB userId ONCE
   let dbUserId: string | null = null;
   try {
     const rows = await sql`SELECT id FROM users WHERE clerk_id = ${userId}`;
     dbUserId = rows[0]?.id ?? null;
-  } catch {
-    // skip
-  }
+  } catch {}
 
-  // Fix 3: Parallelize all DB queries with Promise.allSettled
   const [scoreResult, energyResult, workoutResult, nutritionResult, planResult] =
     await Promise.allSettled([
       dbUserId
         ? sql`
             SELECT total, sleep_pts, nutrition_pts, movement_pts, hydration_pts, narrative
             FROM socio_scores
-            WHERE user_id = ${dbUserId}
-              AND date = CURRENT_DATE
-            LIMIT 1
+            WHERE user_id = ${dbUserId} AND date = CURRENT_DATE LIMIT 1
           `
         : Promise.resolve([]),
       dbUserId
         ? sql`
             SELECT date::text, energy_level
             FROM energy_checkins
-            WHERE user_id = ${dbUserId}
-              AND date >= CURRENT_DATE - INTERVAL '7 days'
+            WHERE user_id = ${dbUserId} AND date >= CURRENT_DATE - INTERVAL '7 days'
             ORDER BY date DESC
           `
         : Promise.resolve([]),
       dbUserId
         ? sql`
-            SELECT COUNT(*) as count
-            FROM workout_logs
-            WHERE user_id = ${dbUserId}
-              AND date >= date_trunc('week', CURRENT_DATE)
-              AND date <= CURRENT_DATE
+            SELECT COUNT(*)::int as count FROM workout_sessions
+            WHERE user_id = ${dbUserId} AND date >= date_trunc('week', CURRENT_DATE) AND date <= CURRENT_DATE
           `
         : Promise.resolve([]),
       dbUserId
         ? sql`
             SELECT kcal_consumed, kcal_goal, protein_g, protein_goal, water_glasses
             FROM daily_nutrition
-            WHERE user_id = ${dbUserId}
-              AND date = CURRENT_DATE
-            LIMIT 1
+            WHERE user_id = ${dbUserId} AND date = CURRENT_DATE LIMIT 1
           `
         : Promise.resolve([]),
       getActivePlan(userId),
@@ -120,26 +93,19 @@ export default async function DashboardPage() {
     scoreResult.status === 'fulfilled' && scoreResult.value.length > 0
       ? (scoreResult.value[0] as unknown as SocioScore)
       : null;
-
   const energyCheckins: EnergyCheckin[] =
-    energyResult.status === 'fulfilled'
-      ? (energyResult.value as unknown as EnergyCheckin[])
-      : [];
-
+    energyResult.status === 'fulfilled' ? (energyResult.value as unknown as EnergyCheckin[]) : [];
   const workoutCount: number =
     workoutResult.status === 'fulfilled'
       ? Number((workoutResult.value as unknown as Array<{ count: number }>)[0]?.count ?? 0)
       : 0;
-
   const nutrition: DailyNutrition | null =
     nutritionResult.status === 'fulfilled' && nutritionResult.value.length > 0
       ? (nutritionResult.value[0] as unknown as DailyNutrition)
       : null;
-
   const plan: { name: string } | null =
     planResult.status === 'fulfilled' ? planResult.value : null;
 
-  // Build 7-day energy map: last 7 days starting from today - 6 days
   const today = new Date();
   const last7Days: Array<{ dateStr: string; shortLabel: string; level: number | null }> = [];
   for (let i = 6; i >= 0; i--) {
@@ -154,201 +120,234 @@ export default async function DashboardPage() {
     last7Days.push({ dateStr, shortLabel, level: checkin?.energy_level ?? null });
   }
 
-  const energyDotColor = (level: number | null) => {
-    if (level === 1) return 'bg-teal-500';
-    if (level === 2) return 'bg-violet-500';
-    if (level === 3) return 'bg-orange-500';
-    return 'bg-zinc-700';
-  };
-
-  const kcalPct = nutrition
-    ? Math.min(100, Math.round((nutrition.kcal_consumed / (nutrition.kcal_goal || 1)) * 100))
-    : 0;
-  const proteinPct = nutrition
-    ? Math.min(100, Math.round((nutrition.protein_g / (nutrition.protein_goal || 1)) * 100))
-    : 0;
+  const kcalGoal = nutrition?.kcal_goal ?? 2000;
+  const proteinGoal = nutrition?.protein_goal ?? 180;
+  const kcalPct = nutrition ? Math.min(100, Math.round((nutrition.kcal_consumed / kcalGoal) * 100)) : 0;
+  const proteinPct = nutrition ? Math.min(100, Math.round((nutrition.protein_g / proteinGoal) * 100)) : 0;
   const waterGlasses = nutrition?.water_glasses ?? 0;
-  const totalGlasses = 8;
+  const totalGlasses = 12;
+
+  // Goal compact display (compute deficit / surplus dynamically)
+  const deficitText = nutrition ? `${nutrition.kcal_consumed} / ${kcalGoal} kcal hoy` : `${kcalGoal} kcal/día`;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
-      <div className="max-w-4xl mx-auto px-4 py-10">
-
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
-            {getGreeting()}, {userName}
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">{formatDateES(today)}</p>
-        </div>
-
-        {/* SOCIO Score Card */}
-        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 mb-6">
-          <div className="text-center mb-6">
-            <div className="text-6xl font-bold text-violet-400">
-              {socioScore ? socioScore.total : '—'}
-            </div>
-            <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">SOCIO Score</p>
+    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      {/* HERO HEADER */}
+      <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="max-w-4xl mx-auto px-6 py-12 relative">
+          {/* Decorative FIT background */}
+          <div
+            aria-hidden
+            className="absolute font-display pointer-events-none select-none"
+            style={{
+              right: '-10px', top: '-20px',
+              fontSize: 'clamp(80px, 14vw, 180px)',
+              fontWeight: 800,
+              color: 'rgba(232,255,71,0.04)',
+              lineHeight: 1,
+            }}
+          >
+            FIT
           </div>
 
-          {/* 4-column breakdown */}
-          <div className="grid grid-cols-4 gap-3 mb-5">
+          <div className="text-xs font-semibold tracking-[3px] uppercase mb-2" style={{ color: 'var(--accent)' }}>
+            ⚡ Tu plan personal · {MONTHS_ES[today.getMonth()]} {today.getFullYear()}
+          </div>
+          <h1 className="font-display leading-none" style={{ fontSize: 'clamp(36px, 8vw, 64px)', letterSpacing: '-0.03em' }}>
+            <span style={{ color: 'var(--text)' }}>{userName.toUpperCase()},</span><br />
+            <span style={{ color: 'var(--accent)' }}>VAMOS</span>
+          </h1>
+          <p className="text-sm mt-3" style={{ color: 'var(--muted)' }}>
+            {formatDateES(today)}
+            {plan && <> · Plan: <span style={{ color: 'var(--text)' }}>{plan.name}</span></>}
+          </p>
+
+          {/* Stats pills */}
+          <div className="flex gap-2 mt-5 flex-wrap">
+            <span className="pill pill-hi">{kcalGoal} kcal/día</span>
+            {socioScore && <span className="pill pill-hi">SOCIO Score · {socioScore.total}</span>}
+            <span className="pill">{proteinGoal}g proteína</span>
+            {workoutCount > 0 && (
+              <span className="pill">{workoutCount} entreno{workoutCount !== 1 ? 's' : ''} esta semana</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-5">
+
+        {/* SOCIO SCORE — Editorial style */}
+        {socioScore ? (
+          <div
+            className="rounded-2xl p-6 flex items-center gap-6"
+            style={{
+              background: 'linear-gradient(135deg, rgba(232,255,71,0.12), rgba(232,255,71,0.04))',
+              border: '1px solid rgba(232,255,71,0.2)',
+            }}
+          >
+            <div>
+              <div className="text-xs uppercase tracking-[2px] mb-1" style={{ color: 'var(--muted)' }}>
+                SOCIO Score
+              </div>
+              <div className="font-display leading-none" style={{ fontSize: '56px', fontWeight: 800, color: 'var(--accent)' }}>
+                {socioScore.total}
+              </div>
+              <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>de 100</div>
+            </div>
+            <div className="flex-1 text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>
+              {socioScore.narrative ? (
+                <p style={{ color: 'var(--text)' }}>{socioScore.narrative}</p>
+              ) : (
+                <p>Día completado. Sigue así para subir mañana.</p>
+              )}
+              <div className="grid grid-cols-4 gap-2 mt-3">
+                {[
+                  { e: '🌙', l: 'Sueño', v: socioScore.sleep_pts },
+                  { e: '🥗', l: 'Nutri', v: socioScore.nutrition_pts },
+                  { e: '🏃', l: 'Movim.', v: socioScore.movement_pts },
+                  { e: '💧', l: 'H2O', v: socioScore.hydration_pts },
+                ].map(({ e, l, v }) => (
+                  <div key={l} className="text-center">
+                    <div className="text-base">{e}</div>
+                    <div className="font-display text-sm" style={{ color: 'var(--accent)' }}>{v}/25</div>
+                    <div className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--muted)' }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="rounded-2xl p-6 text-center"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
+            <p style={{ color: 'var(--muted)' }}>Completa tu check-in del día en la app móvil para ver tu SOCIO Score.</p>
+          </div>
+        )}
+
+        {/* MACROS GRID 3 cols */}
+        {nutrition && (
+          <div className="grid grid-cols-3 gap-2">
             {[
-              { emoji: '🌙', label: 'Sueño', pts: socioScore?.sleep_pts ?? null, max: 25 },
-              { emoji: '🥗', label: 'Nutrición', pts: socioScore?.nutrition_pts ?? null, max: 25 },
-              { emoji: '🏃', label: 'Movimiento', pts: socioScore?.movement_pts ?? null, max: 25 },
-              { emoji: '💧', label: 'Hidratación', pts: socioScore?.hydration_pts ?? null, max: 25 },
-            ].map((item) => (
-              <div key={item.label} className="text-center">
-                <div className="text-xl mb-1">{item.emoji}</div>
-                <div className="text-xs text-zinc-600 dark:text-zinc-400 mb-0.5">{item.label}</div>
-                <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                  {item.pts !== null ? `${item.pts}/${item.max}` : '—'}
+              { name: 'Proteína', val: nutrition.protein_g, goal: proteinGoal, color: '#f97316', kcal: Math.round(nutrition.protein_g * 4) },
+              { name: 'Calorías', val: nutrition.kcal_consumed, goal: kcalGoal, color: '#38bdf8', kcal: nutrition.kcal_consumed },
+              { name: 'Agua', val: nutrition.water_glasses, goal: 12, color: '#22c55e', kcal: 0 },
+            ].map((m) => (
+              <div
+                key={m.name}
+                className="rounded-2xl p-3 text-center"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+              >
+                <div className="font-display" style={{ fontSize: '26px', fontWeight: 800, color: m.color, lineHeight: 1 }}>
+                  {m.val}
+                  <span className="text-xs ml-0.5" style={{ color: 'var(--muted)' }}>
+                    {m.name === 'Proteína' ? 'g' : m.name === 'Agua' ? '' : ''}
+                  </span>
+                </div>
+                {m.kcal > 0 && (
+                  <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{m.kcal} kcal</div>
+                )}
+                <div className="text-[9px] uppercase tracking-[2px] mt-1" style={{ color: 'var(--muted)' }}>
+                  {m.name} / {m.goal}
                 </div>
               </div>
             ))}
           </div>
+        )}
 
-          {/* Narrative */}
-          <p className="text-zinc-700 dark:text-zinc-300 text-sm italic text-center">
-            {socioScore?.narrative
-              ? socioScore.narrative
-              : 'Completa tu check-in del día para ver tu score.'}
-          </p>
+        {/* ESTA SEMANA — energy dots */}
+        <div className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <h2 className="font-display text-base mb-4" style={{ fontWeight: 700 }}>
+            Esta semana
+          </h2>
+          <div className="flex items-end justify-between gap-1">
+            {last7Days.map((day) => {
+              const dotColor = day.level === 3 ? '#ff6b35' : day.level === 2 ? 'var(--accent)' : day.level === 1 ? '#38bdf8' : 'var(--border)';
+              return (
+                <div key={day.dateStr} className="flex flex-col items-center gap-2 flex-1">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ background: dotColor }}
+                    title={day.level !== null ? `${day.shortLabel}: ${ENERGY_LABEL[day.level]}` : `${day.shortLabel}: sin datos`}
+                  />
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
+                    {day.shortLabel}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex gap-4 mt-4 text-[10px]" style={{ color: 'var(--muted)' }}>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ background: '#ff6b35' }} /> Con todo</div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} /> Normal</div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ background: '#38bdf8' }} /> Cansado</div>
+          </div>
         </div>
 
-        {/* 2-column grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-
-          {/* Left — Esta semana (energy dots) */}
-          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
-            <h2 className="font-semibold text-sm text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-4">
-              Esta semana · Energía
-            </h2>
-            {/* Fix 5: title attribute on each dot */}
-            <div className="flex items-end justify-between gap-1">
-              {last7Days.map((day) => {
-                const dotTitle = day.level !== null
-                  ? `${day.shortLabel}: ${ENERGY_LABEL[day.level] ?? 'Sin datos'}`
-                  : `${day.shortLabel}: Sin datos`;
-                return (
-                  <div key={day.dateStr} className="flex flex-col items-center gap-1.5">
-                    <div
-                      className={`w-3 h-3 rounded-full ${energyDotColor(day.level)}`}
-                      title={dotTitle}
-                    />
-                    <span className="text-xs text-zinc-500">{day.shortLabel}</span>
-                  </div>
-                );
-              })}
+        {/* AGUA TRACKER — visual 12 vasos */}
+        {nutrition && (
+          <div className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div className="flex justify-between items-baseline mb-3">
+              <h2 className="font-display text-base" style={{ fontWeight: 700 }}>💧 Hidratación</h2>
+              <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                Meta: 3 litros · {(waterGlasses * 0.25).toFixed(2).replace(/\.?0+$/, '')} litros 💧
+              </span>
             </div>
-            {/* Fix 5: compact legend */}
-            <div className="flex gap-3 mt-2">
-              {[
-                { color: 'bg-orange-500', label: 'Con todo' },
-                { color: 'bg-violet-500', label: 'Normal' },
-                { color: 'bg-teal-500', label: 'Cansado' },
-              ].map(({ color, label }) => (
-                <div key={label} className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${color}`} />
-                  <span className="text-xs text-zinc-500">{label}</span>
+            <div className="flex flex-wrap gap-1.5">
+              {Array.from({ length: totalGlasses }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                  style={{
+                    background: i < waterGlasses ? 'rgba(56,189,248,0.15)' : 'var(--surface2)',
+                    border: `2px solid ${i < waterGlasses ? '#38bdf8' : 'var(--border)'}`,
+                  }}
+                >
+                  💧
                 </div>
               ))}
             </div>
-            {workoutCount > 0 && (
-              <p className="text-zinc-500 text-xs mt-4">
-                {workoutCount} entrenamiento{workoutCount !== 1 ? 's' : ''} esta semana
-              </p>
-            )}
           </div>
+        )}
 
-          {/* Right — Nutrición de hoy */}
-          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
-            <h2 className="font-semibold text-sm text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-4">
-              Nutrición de hoy
-            </h2>
-
-            {nutrition ? (
-              <div className="space-y-4">
-                {/* Kcal */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-zinc-900 dark:text-white">Calorías</span>
-                    <span className="text-zinc-600 dark:text-zinc-400">
-                      {nutrition.kcal_consumed} / {nutrition.kcal_goal} kcal
-                    </span>
-                  </div>
-                  {/* Fix 4: aria attributes on progress bar fill */}
-                  <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-orange-500 rounded-full transition-all"
-                      style={{ width: `${kcalPct}%` }}
-                      role="progressbar"
-                      aria-valuenow={Math.round(kcalPct)}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label="Calorías consumidas"
-                    />
-                  </div>
-                </div>
-
-                {/* Protein */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-zinc-900 dark:text-white">Proteína</span>
-                    <span className="text-zinc-600 dark:text-zinc-400">
-                      {nutrition.protein_g}g / {nutrition.protein_goal}g
-                    </span>
-                  </div>
-                  {/* Fix 4: aria attributes on progress bar fill */}
-                  <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-teal-500 rounded-full transition-all"
-                      style={{ width: `${proteinPct}%` }}
-                      role="progressbar"
-                      aria-valuenow={Math.round(proteinPct)}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label="Proteína consumida"
-                    />
-                  </div>
-                </div>
-
-                {/* Water */}
-                <div>
-                  <p className="text-sm mb-1.5 text-zinc-900 dark:text-white">Agua</p>
-                  <div className="flex gap-1 flex-wrap">
-                    {Array.from({ length: totalGlasses }).map((_, i) => (
-                      <span
-                        key={i}
-                        className={`text-base ${i < waterGlasses ? 'opacity-100' : 'opacity-20'}`}
-                      >
-                        💧
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-zinc-500 text-sm">
-                Registra tu primera comida en la app móvil.
-              </p>
-            )}
-          </div>
+        {/* TIPS — Reglas de oro */}
+        <div className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <h2 className="font-display text-base mb-3" style={{ fontWeight: 700 }}>⚡ Reglas de oro</h2>
+          {[
+            { i: '⚖️', t: 'Pesa la comida los primeros 15 días — sin adivinar' },
+            { i: '🍳', t: 'Cocina con spray o teflón — mínimo aceite' },
+            { i: '🚫', t: '0 alcohol de lunes a sábado' },
+            { i: '😴', t: '7-8 horas de sueño — el músculo crece dormido' },
+            { i: '📱', t: 'Registra cada comida con Snap & Eat en la app móvil' },
+          ].map((tip, idx, arr) => (
+            <div
+              key={tip.t}
+              className="flex items-start gap-3 py-2 text-sm"
+              style={{ borderBottom: idx < arr.length - 1 ? '1px solid var(--border)' : 'none' }}
+            >
+              <span className="text-base flex-shrink-0">{tip.i}</span>
+              <span>{tip.t}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Active plan banner */}
-        {/* Fix 6: Remove false affordance from "Ver en app →" */}
+        {/* CTA — Active plan banner */}
         {plan && (
-          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 flex items-center justify-between">
+          <div
+            className="rounded-2xl p-5 flex items-center justify-between"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,107,53,0.08), rgba(255,107,53,0.02))',
+              border: '1px solid rgba(255,107,53,0.2)',
+            }}
+          >
             <div>
-              <p className="text-zinc-600 dark:text-zinc-400 text-xs uppercase tracking-wider mb-0.5">Plan activo</p>
-              <p className="font-semibold text-zinc-900 dark:text-white">{plan.name}</p>
-              <span className="text-violet-400 text-xs mt-1 inline-block">
+              <p className="text-[10px] uppercase tracking-[2px] mb-1" style={{ color: 'var(--muted)' }}>Plan activo</p>
+              <p className="font-display text-lg" style={{ fontWeight: 700 }}>{plan.name}</p>
+              <span className="text-xs mt-1 inline-block" style={{ color: 'var(--accent2)' }}>
                 Generado por SOCIO AI
               </span>
             </div>
-            <span className="text-zinc-500 text-sm">Ver en app móvil →</span>
+            <span className="text-xs" style={{ color: 'var(--muted)' }}>App móvil →</span>
           </div>
         )}
       </div>
