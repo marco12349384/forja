@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { PulsoLogo } from '../_components/PulsoLogo';
+import { JapaneseAmbient } from '../_components/JapaneseAmbient';
 
 export default async function BrandPage() {
   const { userId } = await auth();
@@ -8,18 +9,22 @@ export default async function BrandPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* Hero */}
+      {/* Hero con ambient japonés */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
+        {/* Bonsai + sol — más artístico para la página de brand */}
+        <JapaneseAmbient variant="bonsai" opacity={0.16} position="top-right" color="#9E1818" />
         <div
           className="deco-text"
           style={{
             fontFamily: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
             fontWeight: 700,
+            position: 'relative',
+            zIndex: 1,
           }}
         >
           富士
         </div>
-        <div className="page-hero-content max-w-4xl">
+        <div className="page-hero-content max-w-4xl relative" style={{ zIndex: 2 }}>
           <div className="page-hero-tag">⚡ IDENTIDAD VISUAL</div>
           <h1>
             <span style={{ color: 'var(--text)' }}>LOGO</span>{' '}

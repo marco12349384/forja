@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { getDb, getActivePlan } from '@forja/api-client';
 import { redirect } from 'next/navigation';
 import { RegenerateForm } from './RegenerateForm';
+import { JapaneseAmbient } from '../_components/JapaneseAmbient';
 
 interface UserProfile {
   goal: string;
@@ -54,21 +55,12 @@ export default async function RegeneratePlanPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* Hero */}
+      {/* Hero con ambient japonés */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1600&h=500&fit=crop&auto=format&q=80)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0.35,
-          }}
-          aria-hidden
-        />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(255,107,53,0.10) 0%, rgba(191,184,171,0.95) 100%)' }} aria-hidden />
-        <div className="deco-text font-display">PLAN</div>
-        <div className="page-hero-content max-w-3xl relative">
+        <JapaneseAmbient variant="fuji" opacity={0.14} color="#9E1818" />
+        <JapaneseAmbient variant="sun" opacity={0.14} position="top-right" color="#9E1818" />
+        <div className="deco-text font-display" style={{ position: 'relative', zIndex: 1 }}>PLAN</div>
+        <div className="page-hero-content max-w-3xl relative" style={{ zIndex: 2 }}>
           <div className="page-hero-tag">⚡ AJUSTA TU PLAN</div>
           <h1>
             <span style={{ color: 'var(--text)' }}>CAMBIA</span>{' '}

@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { getDb } from '@forja/api-client';
+import { JapaneseAmbient } from '../_components/JapaneseAmbient';
 
 interface ScoreRow { date: string; total: number; }
 interface EnergyRow { date: string; energy_level: number; }
@@ -61,25 +62,12 @@ export default async function ProgressPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* ════════ HERO (con imagen de atleta corriendo / progresión) ════════ */}
+      {/* ════════ HERO con ambient japonés ════════ */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1486218119243-13883505764c?w=1600&h=600&fit=crop&auto=format&q=80)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0.4,
-          }}
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(255,107,53,0.12) 0%, rgba(191,184,171,0.92) 100%)' }}
-          aria-hidden
-        />
-        <div className="deco-text font-display">EVO</div>
-        <div className="page-hero-content max-w-4xl relative">
+        {/* Sol + ondas: representa el camino, el flujo del progreso */}
+        <JapaneseAmbient variant="combo" opacity={0.14} color="#9E1818" />
+        <div className="deco-text font-display" style={{ position: 'relative', zIndex: 1 }}>EVO</div>
+        <div className="page-hero-content max-w-4xl relative" style={{ zIndex: 2 }}>
           <div className="page-hero-tag">⚡ ÚLTIMOS 30 DÍAS</div>
           <h1>
             <span style={{ color: 'var(--text)' }}>TU</span>{' '}

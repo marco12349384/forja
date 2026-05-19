@@ -1,5 +1,6 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb, getActivePlan } from '@forja/api-client';
+import { JapaneseAmbient } from '../_components/JapaneseAmbient';
 
 const MONTHS_ES = [
   'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
@@ -96,26 +97,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* ════════ HERO HEADER (con imagen) ════════ */}
+      {/* ════════ HERO HEADER con ambient japonés ════════ */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        {/* Background: heart-rate / data monitor */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1600&h=600&fit=crop&auto=format&q=80)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0.35,
-          }}
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(191,184,171,0.55) 0%, rgba(191,184,171,0.95) 100%)' }}
-          aria-hidden
-        />
-        <div className="deco-text font-display">STATS</div>
-        <div className="page-hero-content max-w-4xl relative">
+        {/* Sol rojo gigante en esquina superior derecha */}
+        <JapaneseAmbient variant="sun" opacity={0.18} position="top-right" color="#9E1818" />
+        <div className="deco-text font-display" style={{ position: 'relative', zIndex: 1 }}>STATS</div>
+        <div className="page-hero-content max-w-4xl relative" style={{ zIndex: 2 }}>
           <div className="page-hero-tag">⚡ {MONTHS_ES[today.getMonth()].toUpperCase()} {today.getFullYear()}</div>
           <h1>
             <span style={{ color: 'var(--text)' }}>{userName.toUpperCase()},</span><br />

@@ -1,6 +1,7 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import Link from 'next/link';
 import { getActivePlan, getTodayWorkout, getDb } from '@forja/api-client';
+import { JapaneseAmbient } from '../_components/JapaneseAmbient';
 
 const DAYS_ES = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 const DAYS_ES_DISPLAY: Record<string, string> = {
@@ -136,10 +137,12 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen pb-24 sm:pb-8" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      {/* ════════ HERO HEADER ════════ */}
+      {/* ════════ HERO HEADER con ambient japonés ════════ */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        <div className="deco-text font-display">HOY</div>
-        <div className="page-hero-content max-w-3xl">
+        {/* Fondo: sol rojo pulsante + ondas seigaiha */}
+        <JapaneseAmbient variant="combo" opacity={0.14} color="#9E1818" />
+        <div className="deco-text font-display" style={{ position: 'relative', zIndex: 1 }}>HOY</div>
+        <div className="page-hero-content max-w-3xl relative" style={{ zIndex: 2 }}>
           <div className="page-hero-tag">⚡ {DAYS_ES_DISPLAY[todayName].toUpperCase()}</div>
           <h1>
             <span style={{ color: 'var(--text)' }}>HOLA</span>{' '}
