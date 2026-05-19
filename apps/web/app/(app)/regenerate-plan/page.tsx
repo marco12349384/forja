@@ -66,7 +66,7 @@ export default async function RegeneratePlanPage() {
           }}
           aria-hidden
         />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(232,255,71,0.12) 0%, rgba(13,13,13,0.95) 100%)' }} aria-hidden />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(255,107,53,0.10) 0%, rgba(255,255,255,0.95) 100%)' }} aria-hidden />
         <div className="deco-text font-display">PLAN</div>
         <div className="page-hero-content max-w-3xl relative">
           <div className="page-hero-tag">⚡ AJUSTA TU PLAN</div>

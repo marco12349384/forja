@@ -1,5 +1,5 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PULSO — Monte Fuji con sol naciente">
   <title>PULSO</title>
-  <circle cx="55" cy="38" r="20" fill="#E8FF47"/>
-  <path d="M 8 84 L 40 34 L 44 39 L 48 36 L 52 39 L 56 36 L 60 34 L 92 84 Z" fill="#F0F0F0"/>
+  <circle cx="55" cy="38" r="20" fill="#FF6B35"/>
+  <path d="M 8 84 L 40 34 L 44 39 L 48 36 L 52 39 L 56 36 L 60 34 L 92 84 Z" fill="#0d0d0d"/>
 </svg>

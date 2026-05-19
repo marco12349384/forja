@@ -23,9 +23,9 @@ interface Props {
 export function PulsoLogo({
   variant = 'full',
   size = 40,
-  mountainColor = 'currentColor',
-  sunColor = 'var(--accent)',
-  textColor = 'currentColor',
+  mountainColor = '#0d0d0d',  // sumi black (default)
+  sunColor = '#FF6B35',        // persimmon orange (default)
+  textColor = '#0d0d0d',
   showKanji = true,
   className,
 }: Props) {

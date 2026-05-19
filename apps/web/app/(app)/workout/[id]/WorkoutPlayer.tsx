@@ -147,7 +147,7 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
   return (
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       {/* ════════ STICKY HEADER ════════ */}
-      <div className="border-b sticky top-0 z-30" style={{ borderColor: 'var(--border)', background: 'rgba(13,13,13,0.92)', backdropFilter: 'blur(20px)' }}>
+      <div className="border-b sticky top-0 z-30" style={{ borderColor: 'var(--border)', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <button onClick={() => router.push('/home')} className="btn-back flex-shrink-0" aria-label="Volver al inicio">
             ← Inicio
@@ -451,7 +451,7 @@ export function WorkoutPlayer({ workout }: { workout: WorkoutData }) {
       <div
         className="fixed bottom-0 left-0 right-0 z-30 border-t safe-bottom"
         style={{
-          background: 'rgba(13,13,13,0.95)',
+          background: 'rgba(255,255,255,0.97)',
           backdropFilter: 'blur(24px)',
           borderColor: 'var(--border)',
           paddingTop: '12px',

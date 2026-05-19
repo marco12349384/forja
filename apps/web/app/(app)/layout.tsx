@@ -12,10 +12,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       <nav
         className="border-b px-4 py-3 flex items-center gap-4 sm:gap-6"
-        style={{ borderColor: 'var(--border)', background: 'linear-gradient(180deg, #0d0d0d 0%, #111 100%)' }}
+        style={{ borderColor: 'var(--border)', background: '#FFFFFF' }}
       >
         <a href="/home" className="flex items-center mr-2 sm:mr-4" aria-label="PULSO inicio">
-          <PulsoLogo variant="full" size={36} mountainColor="#F0F0F0" sunColor="var(--accent)" textColor="#F0F0F0" />
+          <PulsoLogo variant="full" size={36} mountainColor="#0d0d0d" sunColor="#FF6B35" textColor="#0d0d0d" />
         </a>
         <a href="/home" className="text-sm transition-colors hover:opacity-100" style={{ color: 'var(--muted)' }}>Inicio</a>
         <a href="/dashboard" className="text-sm transition-colors hover:opacity-100 hidden sm:inline" style={{ color: 'var(--muted)' }}>Dashboard</a>

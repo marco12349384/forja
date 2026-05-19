@@ -3,26 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* ── PRIMITIVE TOKENS ── */
-  --bg: #0d0d0d;
-  --surface: #161616;
-  --surface2: #1f1f1f;
-  --surface-hover: #1c1c1c;
-  --accent: #e8ff47;
-  --accent-soft: rgba(232, 255, 71, 0.1);
-  --accent-soft-strong: rgba(232, 255, 71, 0.18);
-  --accent-border: rgba(232, 255, 71, 0.25);
-  --accent2: #ff6b35;
-  --accent2-soft: rgba(255, 107, 53, 0.12);
-  --text: #f0f0f0;
-  --text-dim: #b8b8b8;
-  --muted: #888888;
-  --subtle: #555555;
-  --border: #252525;
-  --border-strong: #353535;
-  --success: #22c55e;
-  --danger: #ef4444;
-  --info: #38bdf8;
+  /* ── PRIMITIVE TOKENS — Japanese washi + sumi + persimmon ── */
+  --bg: #FFFFFF;                  /* papel washi */
+  --surface: #FAFAF7;             /* tono crema sutil */
+  --surface2: #F2F1ED;            /* surface alternativo */
+  --surface-hover: #F5F4F0;
+  --accent: #FF6B35;              /* naranja persimmon (柿) */
+  --accent-soft: rgba(255, 107, 53, 0.08);
+  --accent-soft-strong: rgba(255, 107, 53, 0.18);
+  --accent-border: rgba(255, 107, 53, 0.3);
+  --accent2: #DC2626;             /* rojo akai 赤 (Japanese flag red) */
+  --accent2-soft: rgba(220, 38, 38, 0.1);
+  --text: #0d0d0d;                /* tinta sumi */
+  --text-dim: #3a3a3a;
+  --muted: #7a7a7a;
+  --subtle: #b8b8b8;
+  --border: #E5E4DE;
+  --border-strong: #C8C6BD;
+  --success: #16a34a;
+  --danger: #DC2626;
+  --info: #0EA5E9;
 
   /* ── SEMANTIC TOKENS ── */
   --radius-sm: 8px;
@@ -60,7 +60,7 @@ html, body {
   }
 }
 
-/* Focus-visible: keyboard-only focus rings (better than browser default) */
+/* Focus-visible: keyboard-only focus rings */
 :focus {
   outline: none;
 }
@@ -95,7 +95,6 @@ a:focus-visible {
   font-family: 'Inter', 'Instrument Sans', system-ui, sans-serif;
 }
 
-/* Tabular numbers for stats */
 .font-tabular {
   font-variant-numeric: tabular-nums;
 }
@@ -115,7 +114,6 @@ a:focus-visible {
 
 /* ── COMPONENT CLASSES ── */
 
-/* Pills (badges/tags) */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -135,12 +133,11 @@ a:focus-visible {
   color: var(--accent);
 }
 .pill-warm {
-  background: var(--accent2-soft);
-  border-color: rgba(255,107,53,0.25);
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
   color: var(--accent2);
 }
 
-/* Cards */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -150,13 +147,12 @@ a:focus-visible {
               transform var(--duration-fast) var(--ease-out);
 }
 
-/* Interactive cards (clickable) */
 .card-interactive {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-out);
 }
 .card-interactive:hover {
-  border-color: var(--border-strong);
+  border-color: var(--accent);
   background: var(--surface-hover);
   transform: translateY(-1px);
 }
@@ -164,7 +160,6 @@ a:focus-visible {
   transform: translateY(0) scale(0.99);
 }
 
-/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -195,10 +190,10 @@ a:focus-visible {
 
 .btn-primary {
   background: var(--accent);
-  color: #000;
+  color: #FFFFFF;
 }
 .btn-primary:hover:not(:disabled) {
-  background: #d8ef34;
+  background: #E55A23;
 }
 
 .btn-secondary {
@@ -244,7 +239,6 @@ a:focus-visible {
   transform: scale(0.97);
 }
 
-/* Page hero header — consistent across all pages */
 .page-hero {
   position: relative;
   border-bottom: 1px solid var(--border);
@@ -273,7 +267,6 @@ a:focus-visible {
   margin-bottom: 12px;
 }
 
-/* Decorative background text */
 .deco-text {
   position: absolute;
   font-family: 'Barlow Condensed', sans-serif;
@@ -281,14 +274,13 @@ a:focus-visible {
   text-transform: uppercase;
   pointer-events: none;
   user-select: none;
-  color: rgba(232,255,71,0.04);
+  color: rgba(255, 107, 53, 0.06);
   line-height: 1;
   right: -10px;
   top: -20px;
   font-size: clamp(100px, 16vw, 220px);
 }
 
-/* Stats display */
 .stat-num {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 900;
@@ -297,7 +289,6 @@ a:focus-visible {
   letter-spacing: -0.01em;
 }
 
-/* Sets/reps pill (workout) */
 .set-pill {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 800;
@@ -305,13 +296,12 @@ a:focus-visible {
   padding: 4px 12px;
   border-radius: var(--radius-full);
   background: var(--accent);
-  color: #000;
+  color: #FFFFFF;
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* Mobile-first spacing */
 .page-content {
   max-width: 64rem;
   margin: 0 auto;
@@ -322,7 +312,6 @@ a:focus-visible {
   .page-hero-content { padding: 2rem 1.5rem 2.5rem; }
 }
 
-/* Skeleton loader (for future use) */
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -338,9 +327,7 @@ a:focus-visible {
   100% { background-position: -200% 0; }
 }
 
-/* Smooth scroll for in-page links */
 html { scroll-behavior: smooth; }
 
-/* Safe area awareness */
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 .safe-top { padding-top: env(safe-area-inset-top); }
