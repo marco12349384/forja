@@ -103,15 +103,64 @@ PERFIL DEL USUARIO:
 - Experiencia previa entrenando: ${(profile as any).trainingExperience ?? 'no especificada'}
 - % grasa corporal estimado: ${(profile as any).bodyFatPct ? `${(profile as any).bodyFatPct}%` : 'no especificado'}
 
-INSTRUCCIONES (sigue al pie de la letra para no exceder espacio):
-1. Plan de 4 semanas, días por semana: ${daysLine}
-2. Si hay días específicos, úsalos como \`day_of_week\` de cada workout. Si no, escoge tú.
-3. Combina disciplinas para cubrir TODOS los objetivos del usuario (gym/calistenia/yoga/movilidad/pilates/cardio)
-5. Cada workout dura ~${profile.sessionDurationMin ?? (profile as any).session_duration_min} min
-6. Progresión semana a semana
-7. Usa SOLO estos slugs: flexion-brazos, flexion-diamante, sentadilla, pistol-squat, dominada, press-banca, fondos-paralelas, plancha, hollow-body-hold, zancada, hip-thrust, peso-muerto-rumano, curl-bicep, extension-tricep, remo-mancuerna, press-militar, yoga-guerrero, yoga-perro, yoga-arbol, pilates-puente, pilates-cien
-8. Máximo 5 ejercicios por workout. \`notes\` siempre null. \`focus\` máximo 40 chars. \`notes\` de semana null.
-9. NO agregues comentarios ni texto fuera del JSON.
+INSTRUCCIONES CRÍTICAS (rotación inteligente de grupos musculares):
+
+1. **PLAN DE LOS 7 DÍAS DE LA SEMANA SIEMPRE** — Nunca dejes días vacíos. Cada día tiene algo: entrenamiento fuerte, cardio, o recuperación activa. Plan de 4 semanas.
+
+2. **ROTACIÓN OBLIGATORIA** — Nunca trabajes el mismo grupo muscular dos días seguidos. El cuerpo necesita 48h de recuperación por grupo. Sigue UNA de estas estructuras según los días disponibles:
+
+   **Plantilla 7 días (variedad máxima):**
+   - Lunes: TREN SUPERIOR EMPUJE (pecho, hombros, tríceps) — calistenia/gym
+   - Martes: TREN SUPERIOR TRACCIÓN (espalda, bíceps) — calistenia/gym
+   - Miércoles: TREN INFERIOR COMPLETO (cuádriceps, glúteos, isquios, pantorrillas)
+   - Jueves: CARDIO + CORE (HIIT, sprints, abdomen) — cardio
+   - Viernes: HOMBROS + BRAZOS + CORE (variación) — gym/calistenia
+   - Sábado: FULL BODY FUNCIONAL o PIERNA #2 (variación)
+   - Domingo: MOVILIDAD / YOGA / RECUPERACIÓN ACTIVA — yoga/movilidad
+
+   **Plantilla 5 días (descanso pasivo 2 días):**
+   - Lun: Push (pecho/tríceps) · Mar: Pull (espalda/bíceps) · Mié: Pierna
+   - Jue: Hombros+Core o Cardio HIIT · Vie: Full body o Movilidad
+   - Sab/Dom: descanso o yoga ligero
+
+   **Plantilla 3 días (full body alterno):**
+   - Lun: Full body A (énfasis empuje)
+   - Mié: Full body B (énfasis tracción)
+   - Vie: Full body C (énfasis pierna + core)
+
+3. **VARIEDAD DENTRO DE CADA TIPO** — No repitas los mismos 5 ejercicios cada día de pecho. Para los días "push #1" vs "push #2" usa ejercicios DIFERENTES o variaciones (flexión normal vs flexión diamante vs flexión declinada).
+
+4. **TIPOS DE WORKOUT (\`type\`)** — distribuye así durante la semana:
+   - 2-3 días \`gym\` o \`calistenia\` (fuerza)
+   - 1 día \`cardio\` (HIIT, intervalos, no rutinario)
+   - 1 día \`yoga\` o \`movilidad\` (mínimo)
+   - 0-2 días \`home\` (variación cuando no haya tiempo)
+   - Opcional: \`pilates\` para core profundo
+
+5. **CARDIO NO ABURRIDO** — los días de cardio deben mezclar burpees, mountain climbers, sprint en sitio, jumping jacks, sentadillas con salto. NO solo correr 30 min.
+
+6. **DÍA "RECUPERACIÓN ACTIVA"** (\`type: yoga\` o \`movilidad\`) — incluye estiramientos, yoga suave, caminata. NO es día sin nada.
+
+7. **Si hay \`días específicos preferidos\`** úsalos como \`day_of_week\` de los entrenos fuertes y mete recuperación en los otros.
+
+8. **PROGRESIÓN SEMANA A SEMANA** — semana 1 base, semana 2 +10% volumen, semana 3 +intensidad, semana 4 deload (-20% volumen, técnica).
+
+9. **DURACIÓN** ~${profile.sessionDurationMin ?? (profile as any).session_duration_min} min cada workout. Días de recuperación pueden ser 20-30 min.
+
+10. **EXERCISES SLUGS PERMITIDOS** (solo estos): flexion-brazos, flexion-diamante, sentadilla, pistol-squat, dominada, press-banca, fondos-paralelas, plancha, hollow-body-hold, zancada, hip-thrust, peso-muerto-rumano, curl-bicep, extension-tricep, remo-mancuerna, press-militar, yoga-guerrero, yoga-perro, yoga-arbol, pilates-puente, pilates-cien
+
+11. **MÁXIMO 5 ejercicios por workout**. \`notes\` SIEMPRE null. \`focus\` MÁXIMO 40 chars. \`notes\` de semana null.
+
+12. **NO agregues comentarios ni texto fuera del JSON.**
+
+EJEMPLO DE BUEN \`focus\` (40 chars max):
+- "Push · Pecho y tríceps"
+- "Pull · Espalda y bíceps"
+- "Pierna completa"
+- "Cardio HIIT · sin equipo"
+- "Movilidad y respiración"
+
+NO uses focus genéricos como "Día 1" o "Entrenamiento".
 
 RESPONDE SOLO con JSON válido con esta estructura exacta:
 {
