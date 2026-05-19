@@ -8,15 +8,43 @@ const DAYS_ES_DISPLAY: Record<string, string> = {
   miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
 };
 
-// Gradient cover per workout type (Nike-style)
-const TYPE_COVER: Record<string, { gradient: string; label: string }> = {
-  calistenia: { gradient: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)', label: 'CALISTENIA' },
-  gym:        { gradient: 'linear-gradient(135deg, #E8FF47 0%, #B8DD0F 100%)', label: 'GYM' },
-  cardio:     { gradient: 'linear-gradient(135deg, #FF3D71 0%, #C70039 100%)', label: 'CARDIO' },
-  home:       { gradient: 'linear-gradient(135deg, #A78BFA 0%, #6B21A8 100%)', label: 'CASA' },
-  yoga:       { gradient: 'linear-gradient(135deg, #6ABEA7 0%, #2D8F7C 100%)', label: 'YOGA' },
-  movilidad:  { gradient: 'linear-gradient(135deg, #38BDF8 0%, #0369A1 100%)', label: 'MOVILIDAD' },
-  pilates:    { gradient: 'linear-gradient(135deg, #EC4899 0%, #BE185D 100%)', label: 'PILATES' },
+// Cover image + tint per workout type (Nike-style)
+const TYPE_COVER: Record<string, { img: string; tint: string; label: string }> = {
+  calistenia: {
+    img: 'https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&h=900&fit=crop&auto=format&q=80',
+    tint: 'linear-gradient(180deg, rgba(255,107,53,0.25) 0%, rgba(0,0,0,0.78) 100%)',
+    label: 'CALISTENIA',
+  },
+  gym: {
+    img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&h=900&fit=crop&auto=format&q=80',
+    tint: 'linear-gradient(180deg, rgba(232,255,71,0.18) 0%, rgba(0,0,0,0.8) 100%)',
+    label: 'GYM',
+  },
+  cardio: {
+    img: 'https://images.unsplash.com/photo-1486218119243-13883505764c?w=1200&h=900&fit=crop&auto=format&q=80',
+    tint: 'linear-gradient(180deg, rgba(255,61,113,0.2) 0%, rgba(0,0,0,0.82) 100%)',
+    label: 'CARDIO',
+  },
+  home: {
+    img: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=900&fit=crop&auto=format&q=80',
+    tint: 'linear-gradient(180deg, rgba(167,139,250,0.18) 0%, rgba(0,0,0,0.8) 100%)',
+    label: 'CASA',
+  },
+  yoga: {
+    img: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&h=900&fit=crop&auto=format&q=80',
+    tint: 'linear-gradient(180deg, rgba(106,190,167,0.2) 0%, rgba(0,0,0,0.78) 100%)',
+    label: 'YOGA',
+  },
+  movilidad: {
+    img: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&h=900&fit=crop&auto=format&q=80',
+    tint: 'linear-gradient(180deg, rgba(56,189,248,0.18) 0%, rgba(0,0,0,0.8) 100%)',
+    label: 'MOVILIDAD',
+  },
+  pilates: {
+    img: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=1200&h=900&fit=crop&auto=format&q=80',
+    tint: 'linear-gradient(180deg, rgba(236,72,153,0.18) 0%, rgba(0,0,0,0.8) 100%)',
+    label: 'PILATES',
+  },
 };
 
 export default async function HomePage() {
@@ -56,13 +84,21 @@ export default async function HomePage() {
         {/* ── HERO WORKOUT CARD (Nike-style with cover) ── */}
         {todayWorkout && cover ? (
           <Link href={`/workout/${todayWorkout.id}`} className="block group" aria-label={`Iniciar ${todayWorkout.name}`}>
-            <div className="relative rounded-3xl overflow-hidden" style={{ minHeight: 280 }}>
-              {/* Cover gradient */}
-              <div className="absolute inset-0" style={{ background: cover.gradient }} aria-hidden />
-              {/* Dark overlay for readability */}
+            <div className="relative rounded-3xl overflow-hidden" style={{ minHeight: 320 }}>
+              {/* Cover image */}
+              <div
+                className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                style={{
+                  backgroundImage: `url('${cover.img}')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+                aria-hidden
+              />
+              {/* Tinted dark overlay for readability */}
               <div
                 className="absolute inset-0"
-                style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)' }}
+                style={{ background: cover.tint }}
                 aria-hidden
               />
               {/* Decorative pattern */}
@@ -82,7 +118,7 @@ export default async function HomePage() {
               </div>
 
               {/* Content */}
-              <div className="relative p-6 sm:p-8 flex flex-col h-full" style={{ minHeight: 280 }}>
+              <div className="relative p-6 sm:p-8 flex flex-col h-full" style={{ minHeight: 320 }}>
                 <div className="flex items-start justify-between mb-auto">
                   <div className="text-xs font-bold tracking-[3px] uppercase" style={{ color: '#fff' }}>
                     ⚡ Tu entreno · {cover.label}
@@ -210,17 +246,45 @@ export default async function HomePage() {
           </div>
         )}
 
-        {/* ── EXPLORE GRID — Nike-style ── */}
+        {/* ── EXPLORE GRID — Nike-style con fotos fitness ── */}
         <div>
           <h3 className="font-display text-lg mb-3" style={{ fontWeight: 800, letterSpacing: '1px' }}>
             EXPLORAR
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { href: '/dashboard', emoji: '📊', name: 'Stats',      desc: 'SOCIO Score · macros',  gradient: 'linear-gradient(135deg, #E8FF47 0%, #B8DD0F 100%)' },
-              { href: '/progress',  emoji: '📈', name: 'Progreso',   desc: '30 días · timeline',    gradient: 'linear-gradient(135deg, #FF6B35 0%, #C70039 100%)' },
-              { href: '/library',   emoji: '📚', name: 'Ejercicios', desc: 'Biblioteca completa',    gradient: 'linear-gradient(135deg, #A78BFA 0%, #6B21A8 100%)' },
-              { href: '/settings',  emoji: '⚙️', name: 'Ajustes',    desc: 'Tema · cuenta',          gradient: 'linear-gradient(135deg, #38BDF8 0%, #0369A1 100%)' },
+              {
+                href: '/dashboard',
+                name: 'Stats',
+                desc: 'SOCIO Score · macros',
+                // Apple Watch fitness data — Karsten Winegeart
+                img: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=600&fit=crop&auto=format&q=80',
+                tint: 'linear-gradient(180deg, rgba(232,255,71,0.15) 0%, rgba(0,0,0,0.75) 100%)',
+              },
+              {
+                href: '/progress',
+                name: 'Progreso',
+                desc: '30 días · timeline',
+                // Athlete running outdoor — Jonathan Borba
+                img: 'https://images.unsplash.com/photo-1486218119243-13883505764c?w=600&h=600&fit=crop&auto=format&q=80',
+                tint: 'linear-gradient(180deg, rgba(255,107,53,0.2) 0%, rgba(0,0,0,0.8) 100%)',
+              },
+              {
+                href: '/library',
+                name: 'Ejercicios',
+                desc: 'Biblioteca completa',
+                // Dumbbells gym dark — Anastase Maragos
+                img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=600&fit=crop&auto=format&q=80',
+                tint: 'linear-gradient(180deg, rgba(167,139,250,0.15) 0%, rgba(0,0,0,0.78) 100%)',
+              },
+              {
+                href: '/settings',
+                name: 'Ajustes',
+                desc: 'Tema · cuenta',
+                // Sneakers on dark surface — Imani Bahati
+                img: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&h=600&fit=crop&auto=format&q=80',
+                tint: 'linear-gradient(180deg, rgba(56,189,248,0.15) 0%, rgba(0,0,0,0.78) 100%)',
+              },
             ].map((a) => (
               <Link
                 key={a.href}
@@ -229,25 +293,29 @@ export default async function HomePage() {
                 style={{ aspectRatio: '1.2 / 1', minHeight: 140 }}
                 aria-label={a.name}
               >
-                <div className="absolute inset-0" style={{ background: a.gradient }} aria-hidden />
+                {/* Background image */}
                 <div
-                  className="absolute inset-0"
-                  style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 100%)' }}
+                  className="absolute inset-0 transition-transform duration-500 group-hover:scale-110"
+                  style={{
+                    backgroundImage: `url('${a.img}')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
                   aria-hidden
                 />
-                <div className="absolute inset-0 p-4 flex flex-col justify-between transition-transform group-hover:scale-[1.02]">
-                  <span className="text-2xl" aria-hidden>{a.emoji}</span>
-                  <div>
-                    <p
-                      className="font-display"
-                      style={{ color: '#fff', fontWeight: 900, fontSize: 22, letterSpacing: '-0.01em' }}
-                    >
-                      {a.name.toUpperCase()}
-                    </p>
-                    <p className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                      {a.desc}
-                    </p>
-                  </div>
+                {/* Tinted dark overlay for text readability */}
+                <div className="absolute inset-0" style={{ background: a.tint }} aria-hidden />
+                {/* Content */}
+                <div className="absolute inset-0 p-4 flex flex-col justify-end">
+                  <p
+                    className="font-display"
+                    style={{ color: '#fff', fontWeight: 900, fontSize: 26, letterSpacing: '-0.01em', lineHeight: 0.95 }}
+                  >
+                    {a.name.toUpperCase()}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    {a.desc}
+                  </p>
                 </div>
               </Link>
             ))}
