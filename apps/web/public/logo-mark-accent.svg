@@ -1,22 +1,9 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PULSO logo">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PULSO — Monte Fuji con sol naciente">
   <title>PULSO</title>
-  <!-- Enso (zen circle) in white -->
-  <path
-    d="M 72 12
-       A 42 42 0 1 0 87 47"
-    fill="none"
-    stroke="#F0F0F0"
-    stroke-width="7"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <!-- Pulse line in accent yellow — the "heartbeat" feature -->
-  <path
-    d="M 14 50 L 30 50 L 36 40 L 44 62 L 50 50 L 86 50"
-    fill="none"
-    stroke="#E8FF47"
-    stroke-width="7"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <!-- Sol naciente en amarillo accent -->
+  <circle cx="68" cy="28" r="13" fill="#E8FF47"/>
+  <!-- Monte Fuji blanco -->
+  <path d="M 8 85 L 38 38 L 44 46 L 48 41 L 52 41 L 56 46 L 62 38 L 92 85 Z" fill="#F0F0F0"/>
+  <!-- Línea de horizonte sutil -->
+  <line x1="6" y1="86" x2="94" y2="86" stroke="#F0F0F0" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
 </svg>

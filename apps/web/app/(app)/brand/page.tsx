@@ -10,7 +10,15 @@ export default async function BrandPage() {
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       {/* Hero */}
       <div className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
-        <div className="deco-text font-display">円</div>
+        <div
+          className="deco-text"
+          style={{
+            fontFamily: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
+            fontWeight: 700,
+          }}
+        >
+          富士
+        </div>
         <div className="page-hero-content max-w-4xl">
           <div className="page-hero-tag">⚡ IDENTIDAD VISUAL</div>
           <h1>
@@ -18,8 +26,9 @@ export default async function BrandPage() {
             <span style={{ color: 'var(--accent)' }}>PULSO</span>
           </h1>
           <p className="text-sm sm:text-base mt-4 max-w-2xl" style={{ color: 'var(--text-dim)' }}>
-            Inspirado en el <strong>Enso (円相)</strong> — el círculo zen que los monjes japoneses dibujan
-            en una sola exhalación. Una <strong>línea de pulso</strong> lo atraviesa: balance entre meditación y acción.
+            Inspirado en el <strong>Monte Fuji (富士山)</strong> con el <strong>sol naciente (日の出)</strong> —
+            el motivo más icónico de Japón. La montaña es el camino. El sol es la energía.
+            El kanji <strong style={{ color: 'var(--accent)' }}>力</strong> (chikara) significa <em>fuerza</em>.
           </p>
         </div>
       </div>
@@ -32,24 +41,51 @@ export default async function BrandPage() {
           <p className="text-[10px] uppercase tracking-[2px] font-semibold mb-5" style={{ color: 'var(--muted)' }}>3 capas de significado</p>
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <div className="font-display text-2xl" style={{ color: 'var(--accent)' }}>円</div>
-              <h3 className="font-display text-sm" style={{ letterSpacing: '0.5px' }}>ENSO · UN TRAZO</h3>
+              <div
+                className="text-3xl"
+                style={{
+                  color: 'var(--accent)',
+                  fontFamily: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
+                  fontWeight: 700,
+                }}
+              >
+                富士山
+              </div>
+              <h3 className="font-display text-sm" style={{ letterSpacing: '0.5px' }}>FUJI-SAN · EL CAMINO</h3>
               <p className="text-xs sm:text-sm" style={{ color: 'var(--text-dim)' }}>
-                Como un latido del corazón, un solo gesto consciente. No es perfecto — es honesto.
+                La montaña sagrada. Símbolo de disciplina, esfuerzo y la cumbre como recompensa.
               </p>
             </div>
             <div className="space-y-2">
-              <div className="font-display text-2xl" style={{ color: 'var(--accent)' }}>侘寂</div>
-              <h3 className="font-display text-sm" style={{ letterSpacing: '0.5px' }}>WABI-SABI</h3>
+              <div
+                className="text-3xl"
+                style={{
+                  color: 'var(--accent)',
+                  fontFamily: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
+                  fontWeight: 700,
+                }}
+              >
+                日の出
+              </div>
+              <h3 className="font-display text-sm" style={{ letterSpacing: '0.5px' }}>HI-NO-DE · SOL NACIENTE</h3>
               <p className="text-xs sm:text-sm" style={{ color: 'var(--text-dim)' }}>
-                Belleza en la imperfección. El círculo se abre arriba — no juzga, acompaña.
+                Cada día empieza con energía nueva. El sol amarillo es tu pulso al despertar.
               </p>
             </div>
             <div className="space-y-2">
-              <div className="font-display text-2xl" style={{ color: 'var(--accent)' }}>気</div>
-              <h3 className="font-display text-sm" style={{ letterSpacing: '0.5px' }}>KI · ENERGÍA VITAL</h3>
+              <div
+                className="text-3xl"
+                style={{
+                  color: 'var(--accent)',
+                  fontFamily: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
+                  fontWeight: 700,
+                }}
+              >
+                力
+              </div>
+              <h3 className="font-display text-sm" style={{ letterSpacing: '0.5px' }}>CHIKARA · FUERZA</h3>
               <p className="text-xs sm:text-sm" style={{ color: 'var(--text-dim)' }}>
-                La línea de pulso amarilla = el flujo de energía. Tu socio que reconoce tu ritmo real.
+                Dos trazos · una idea. El acto disciplinado de entrenar tu cuerpo y mente.
               </p>
             </div>
           </div>
@@ -62,7 +98,7 @@ export default async function BrandPage() {
             Marca + Wordmark · uso primario
           </p>
           <div className="card p-10 sm:p-16 flex items-center justify-center" style={{ minHeight: 200 }}>
-            <PulsoLogo variant="full" size={80} ringColor="#F0F0F0" pulseColor="#E8FF47" textColor="#F0F0F0" />
+            <PulsoLogo variant="full" size={80} mountainColor="#F0F0F0" sunColor="#E8FF47" textColor="#F0F0F0" />
           </div>
         </section>
 
@@ -74,13 +110,13 @@ export default async function BrandPage() {
           </p>
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
             <div className="card aspect-square flex items-center justify-center">
-              <PulsoLogo variant="mark" size={80} ringColor="#F0F0F0" pulseColor="#E8FF47" />
+              <PulsoLogo variant="mark" size={80} mountainColor="#F0F0F0" sunColor="#E8FF47" />
             </div>
             <div className="card aspect-square flex items-center justify-center" style={{ background: '#fff', borderColor: '#fff' }}>
-              <PulsoLogo variant="mark" size={80} ringColor="#0d0d0d" pulseColor="#FF6B35" />
+              <PulsoLogo variant="mark" size={80} mountainColor="#0d0d0d" sunColor="#FF6B35" />
             </div>
             <div className="aspect-square flex items-center justify-center rounded-2xl" style={{ background: 'var(--accent)' }}>
-              <PulsoLogo variant="mark" size={80} ringColor="#0d0d0d" pulseColor="#0d0d0d" />
+              <PulsoLogo variant="mark" size={80} mountainColor="#0d0d0d" sunColor="#0d0d0d" />
             </div>
           </div>
         </section>

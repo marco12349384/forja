@@ -1,36 +1,42 @@
 /**
  * PulsoLogo — Logo oficial de PULSO
  *
- * Concepto: ENSO (円相) — círculo zen japonés, dibujado en una sola exhalación.
- * Una línea de pulso (heartbeat ECG) lo atraviesa: balance entre meditación y acción.
+ * Concepto: 富士山 (Fuji-san) + 日の出 (hi-no-de, sol naciente)
+ * - Monte Fuji = el camino, la cumbre, la disciplina
+ * - Sol naciente = energía, nuevo día, el latido (pulso) del despertar
+ *
+ * Inspirado en la estética minimalista japonesa: Hokusai, Muji, Issey Miyake.
  *
  * Variantes:
- *   - "mark"     → solo el símbolo (enso + pulse). Cuadrado.
- *   - "full"     → símbolo + wordmark PULSO. Horizontal.
- *   - "wordmark" → solo el texto PULSO.
+ *   - "mark"     → solo el símbolo (Fuji + sol). Cuadrado.
+ *   - "full"     → símbolo + wordmark PULSO + furigana 力 (chikara/strength)
+ *   - "wordmark" → solo el texto PULSO
  */
 
 interface Props {
   variant?: 'mark' | 'full' | 'wordmark';
   size?: number;
-  /** Color del enso (círculo). Default: blanco */
-  ringColor?: string;
-  /** Color de la línea de pulso. Default: accent amarillo */
-  pulseColor?: string;
+  /** Color del Fuji (montaña). Default: blanco */
+  mountainColor?: string;
+  /** Color del sol. Default: accent yellow */
+  sunColor?: string;
   /** Color del wordmark. Default: blanco */
   textColor?: string;
+  /** Mostrar kanji 力 al lado del wordmark */
+  showKanji?: boolean;
   className?: string;
 }
 
 export function PulsoLogo({
   variant = 'full',
   size = 40,
-  ringColor = 'currentColor',
-  pulseColor = 'var(--accent)',
+  mountainColor = 'currentColor',
+  sunColor = 'var(--accent)',
   textColor = 'currentColor',
+  showKanji = true,
   className,
 }: Props) {
-  // ── MARK SVG (Enso + pulse) ──────────────────────────────────────
+  // ── MARK SVG (Fuji + sol) ─────────────────────────────────────
   const Mark = (
     <svg
       viewBox="0 0 100 100"
@@ -39,26 +45,32 @@ export function PulsoLogo({
       height={size}
       style={{ flexShrink: 0 }}
       role="img"
-      aria-label="PULSO"
+      aria-label="PULSO — Monte Fuji con sol naciente"
     >
-      {/* Enso (zen circle) — abierto arriba-derecha al estilo tradicional */}
-      <path
-        d="M 72 12 A 42 42 0 1 0 87 47"
-        fill="none"
-        stroke={ringColor}
-        strokeWidth={7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      {/* Sol naciente — círculo arriba-derecha (rising sun) */}
+      <circle
+        cx="68"
+        cy="28"
+        r="13"
+        fill={sunColor}
       />
-      {/* Pulse line — ECG cruzando horizontalmente */}
+
+      {/* Monte Fuji — silueta con pico nevado estilizado */}
       <path
-        d="M 14 50 L 30 50 L 36 40 L 44 62 L 50 50 L 86 50"
-        fill="none"
-        stroke={pulseColor}
-        strokeWidth={7}
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M 8 85
+           L 38 38
+           L 44 46
+           L 48 41
+           L 52 41
+           L 56 46
+           L 62 38
+           L 92 85
+           Z"
+        fill={mountainColor}
       />
+
+      {/* Línea de horizonte / base sutil (opcional) */}
+      <line x1="6" y1="86" x2="94" y2="86" stroke={mountainColor} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
     </svg>
   );
 
@@ -66,8 +78,8 @@ export function PulsoLogo({
     return <span className={className}>{Mark}</span>;
   }
 
-  // ── WORDMARK ───────────────────────────────────────────────────
-  const wordmarkSize = Math.round(size * 0.6); // proportional
+  // ── WORDMARK ─────────────────────────────────────────────────
+  const wordmarkSize = Math.round(size * 0.6);
   const Wordmark = (
     <span
       className="font-display"
@@ -78,25 +90,50 @@ export function PulsoLogo({
         textTransform: 'uppercase',
         color: textColor,
         lineHeight: 1,
-        // Subtle text effect — wordmark feels carved
       }}
     >
       PULSO
     </span>
   );
 
+  // Japanese kanji — 力 (chikara = strength/power)
+  const Kanji = showKanji && (
+    <span
+      style={{
+        fontSize: Math.round(size * 0.42),
+        fontWeight: 700,
+        color: typeof sunColor === 'string' && sunColor.startsWith('var(') ? 'var(--accent)' : sunColor,
+        lineHeight: 1,
+        fontFamily: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
+        opacity: 0.9,
+      }}
+      aria-hidden
+      title="力 chikara · fuerza"
+    >
+      力
+    </span>
+  );
+
   if (variant === 'wordmark') {
-    return <span className={className}>{Wordmark}</span>;
+    return (
+      <span className={className} style={{ display: 'inline-flex', alignItems: 'baseline', gap: size * 0.18 }}>
+        {Wordmark}
+        {Kanji}
+      </span>
+    );
   }
 
-  // ── FULL (mark + wordmark) ─────────────────────────────────────
+  // ── FULL (mark + wordmark + kanji) ───────────────────────────
   return (
     <span
       className={className}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.2 }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.22 }}
     >
       {Mark}
-      {Wordmark}
+      <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: size * 0.16 }}>
+        {Wordmark}
+        {Kanji}
+      </span>
     </span>
   );
 }

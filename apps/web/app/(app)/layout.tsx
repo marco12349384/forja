@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         style={{ borderColor: 'var(--border)', background: 'linear-gradient(180deg, #0d0d0d 0%, #111 100%)' }}
       >
         <a href="/home" className="flex items-center mr-2 sm:mr-4" aria-label="PULSO inicio">
-          <PulsoLogo variant="full" size={36} ringColor="#F0F0F0" pulseColor="var(--accent)" textColor="#F0F0F0" />
+          <PulsoLogo variant="full" size={36} mountainColor="#F0F0F0" sunColor="var(--accent)" textColor="#F0F0F0" />
         </a>
         <a href="/home" className="text-sm transition-colors hover:opacity-100" style={{ color: 'var(--muted)' }}>Inicio</a>
         <a href="/dashboard" className="text-sm transition-colors hover:opacity-100 hidden sm:inline" style={{ color: 'var(--muted)' }}>Dashboard</a>
