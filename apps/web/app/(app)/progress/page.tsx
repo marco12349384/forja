@@ -75,7 +75,7 @@ export default async function ProgressPage() {
         />
         <div
           className="absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(255,107,53,0.12) 0%, rgba(255,255,255,0.92) 100%)' }}
+          style={{ background: 'linear-gradient(180deg, rgba(255,107,53,0.12) 0%, rgba(236,231,220,0.92) 100%)' }}
           aria-hidden
         />
         <div className="deco-text font-display">EVO</div>

@@ -111,7 +111,7 @@ export default async function DashboardPage() {
         />
         <div
           className="absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.95) 100%)' }}
+          style={{ background: 'linear-gradient(180deg, rgba(236,231,220,0.55) 0%, rgba(236,231,220,0.95) 100%)' }}
           aria-hidden
         />
         <div className="deco-text font-display">STATS</div>

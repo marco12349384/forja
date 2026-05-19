@@ -3,26 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* ── PRIMITIVE TOKENS — Japanese washi + sumi + persimmon ── */
-  --bg: #FFFFFF;                  /* papel washi */
-  --surface: #FAFAF7;             /* tono crema sutil */
-  --surface2: #F2F1ED;            /* surface alternativo */
-  --surface-hover: #F5F4F0;
-  --accent: #FF6B35;              /* naranja persimmon (柿) */
-  --accent-soft: rgba(255, 107, 53, 0.08);
-  --accent-soft-strong: rgba(255, 107, 53, 0.18);
-  --accent-border: rgba(255, 107, 53, 0.3);
-  --accent2: #DC2626;             /* rojo akai 赤 (Japanese flag red) */
-  --accent2-soft: rgba(220, 38, 38, 0.1);
-  --text: #0d0d0d;                /* tinta sumi */
-  --text-dim: #3a3a3a;
-  --muted: #7a7a7a;
-  --subtle: #b8b8b8;
-  --border: #E5E4DE;
-  --border-strong: #C8C6BD;
-  --success: #16a34a;
-  --danger: #DC2626;
-  --info: #0EA5E9;
+  /* ── PRIMITIVE TOKENS — Washi paper aged + sumi + persimmon (neutral warm) ── */
+  --bg: #ECE7DC;                  /* papel washi envejecido — neutral cálido */
+  --surface: #F4EFE3;             /* cards: más claras que bg (efecto elevación) */
+  --surface2: #E0DAC9;             /* underlay: más oscuro para profundidad */
+  --surface-hover: #F8F3E7;
+  --accent: #FF6B35;               /* naranja persimmon (柿) — sin cambio */
+  --accent-soft: rgba(255, 107, 53, 0.10);
+  --accent-soft-strong: rgba(255, 107, 53, 0.20);
+  --accent-border: rgba(255, 107, 53, 0.32);
+  --accent2: #B91C1C;              /* rojo akai 赤 más oscuro para mejor contraste sobre beige */
+  --accent2-soft: rgba(185, 28, 28, 0.10);
+  --text: #1A1814;                 /* sumi cálido (no negro puro) */
+  --text-dim: #4A463E;
+  --muted: #6F6A60;
+  --subtle: #9C968A;
+  --border: #C8C1B0;
+  --border-strong: #A39C8A;
+  --success: #15803D;
+  --danger: #B91C1C;
+  --info: #0369A1;
 
   /* ── SEMANTIC TOKENS ── */
   --radius-sm: 8px;
