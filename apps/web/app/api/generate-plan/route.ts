@@ -5,12 +5,20 @@ import { buildGeneratePlanPrompt } from '@forja/ai';
 import type { PulsoOnboardingData } from '@forja/types';
 import Anthropic from '@anthropic-ai/sdk';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const MODEL_TIMEOUT_MS = 55_000;
+const MODEL_TIMEOUT_MS = 120_000;
 
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Resolve API key at runtime (lazy) — avoids module-load undefined issues
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  console.log('[generate-plan] ANTHROPIC_API_KEY length:', (apiKey ?? '').length);
+  if (!apiKey || apiKey.length < 20) {
+    console.error('[generate-plan] Missing ANTHROPIC_API_KEY in process.env');
+    return NextResponse.json({ error: 'Config del servidor: falta API key.' }, { status: 500 });
+  }
+  const anthropic = new Anthropic({ apiKey });
 
   try {
     const { profile }: { profile: PulsoOnboardingData } = await req.json();
@@ -60,7 +68,7 @@ export async function POST(req: Request) {
       message = await anthropic.messages.create(
         {
           model: 'claude-sonnet-4-5',
-          max_tokens: 4000,
+          max_tokens: 16000,
           messages: [{ role: 'user', content: prompt }],
         },
         { signal: controller.signal },
@@ -82,8 +90,40 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No se pudo generar el plan. Intenta de nuevo.' }, { status: 500 });
     }
     const raw = first.text.trim();
-    const cleaned = raw.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
-    const planData = JSON.parse(cleaned);
+    let cleaned = raw.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+
+    let planData;
+    try {
+      planData = JSON.parse(cleaned);
+    } catch (parseErr) {
+      // Stop reason 'max_tokens' = response truncated. Try to repair JSON by trimming
+      // back to the last complete object.
+      console.warn('[generate-plan] JSON parse failed (stop_reason:', message.stop_reason, '). Attempting repair…');
+      const lastBrace = cleaned.lastIndexOf('}');
+      if (lastBrace > 0) {
+        // Walk back to find a structurally valid prefix by attempting parse on progressively shorter strings.
+        for (let cut = lastBrace; cut > 0; cut = cleaned.lastIndexOf('}', cut - 1)) {
+          try {
+            // Close any open arrays/objects naively
+            const candidate = cleaned.slice(0, cut + 1)
+              .replace(/,\s*$/, '')          // trailing comma
+              + ']}'.repeat(0); // (no auto-close, we rely on the trim)
+            const fixed = candidate + (candidate.match(/^\s*\{/) ? '' : '');
+            const closed = fixed + (fixed.split('{').length > fixed.split('}').length ? '}' : '')
+                                 + (fixed.split('[').length > fixed.split(']').length ? ']' : '');
+            planData = JSON.parse(closed);
+            console.warn('[generate-plan] Recovered plan with', planData?.weeks?.length ?? 0, 'weeks');
+            break;
+          } catch {
+            // keep walking back
+          }
+        }
+      }
+      if (!planData) {
+        console.error('[generate-plan] Could not repair JSON. Raw length:', raw.length);
+        return NextResponse.json({ error: 'El plan se generó incompleto. Intenta de nuevo.' }, { status: 500 });
+      }
+    }
 
     const weeks: any[] = planData.weeks ?? [];
     const weeksTotal = weeks.length || 4;

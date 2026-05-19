@@ -90,15 +90,20 @@ PERFIL DEL USUARIO:
 - Presupuesto de comida: ${profile.budget ?? 'no especificado'}
 - Cocina en casa: ${profile.cookingFreq ?? 'a veces'}
 - Alergias: ${(profile.allergies ?? []).join(', ') || 'ninguna'}
+- Horas de sueño promedio: ${(profile as any).sleepHours ?? 'no especificado'}
+- Vasos de agua/día: ${(profile as any).waterGlasses ?? 'no especificado'}
+- Nivel de actividad diaria: ${(profile as any).dailyActivityLevel ?? 'no especificado'}
+- Experiencia previa entrenando: ${(profile as any).trainingExperience ?? 'no especificada'}
+- % grasa corporal estimado: ${(profile as any).bodyFatPct ? `${(profile as any).bodyFatPct}%` : 'no especificado'}
 
-INSTRUCCIONES:
-1. Genera un plan de 4 semanas con ${profile.daysPerWeek ?? (profile as any).days_per_week} días de entrenamiento por semana
-2. Mezcla disciplinas apropiadas (gym, calistenia, yoga, movilidad, cardio, pilates) según el objetivo
-3. Incluye días de recuperación activa (yoga/movilidad) en la semana
-4. Adapta el volumen e intensidad al nivel del usuario
-5. Progresiona la dificultad semana a semana
-6. Cada workout debe durar aproximadamente ${profile.sessionDurationMin ?? (profile as any).session_duration_min} minutos
-7. Usa SOLO ejercicios de esta lista (por slug): flexion-brazos, flexion-diamante, sentadilla, pistol-squat, dominada, press-banca, fondos-paralelas, plancha, hollow-body-hold, zancada, hip-thrust, peso-muerto-rumano, curl-bicep, extension-tricep, remo-mancuerna, press-militar, yoga-guerrero, yoga-perro, yoga-arbol, pilates-puente, pilates-cien
+INSTRUCCIONES (sigue al pie de la letra para no exceder espacio):
+1. Plan de 4 semanas, ${profile.daysPerWeek ?? (profile as any).days_per_week} días/semana
+2. Mezcla gym/calistenia/yoga/movilidad/pilates según objetivo y experiencia
+3. Cada workout dura ~${profile.sessionDurationMin ?? (profile as any).session_duration_min} min
+4. Progresión semana a semana
+5. Usa SOLO estos slugs: flexion-brazos, flexion-diamante, sentadilla, pistol-squat, dominada, press-banca, fondos-paralelas, plancha, hollow-body-hold, zancada, hip-thrust, peso-muerto-rumano, curl-bicep, extension-tricep, remo-mancuerna, press-militar, yoga-guerrero, yoga-perro, yoga-arbol, pilates-puente, pilates-cien
+6. Máximo 5 ejercicios por workout. \`notes\` siempre null. \`focus\` máximo 40 chars. \`notes\` de semana null.
+7. NO agregues comentarios ni texto fuera del JSON.
 
 RESPONDE SOLO con JSON válido con esta estructura exacta:
 {

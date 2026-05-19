@@ -373,6 +373,154 @@ export default function OnboardingScreen() {
                 Se usa para ajustar cálculos hormonales y de recuperación.
               </Text>
             </View>
+
+            {/* % de grasa corporal (opcional) */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: 6 }}>
+                % grasa corporal estimado (opcional)
+              </Text>
+              <TextInput
+                keyboardType="number-pad"
+                value={(data as any).bodyFatPct?.toString() ?? ''}
+                onChangeText={(v) => setData((p) => ({ ...p, bodyFatPct: v ? parseInt(v) : undefined } as any))}
+                placeholder="ej. 18"
+                placeholderTextColor={colors.subtle}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderWidth: 1.5,
+                  borderColor: (data as any).bodyFatPct ? colors.primary : colors.border,
+                  borderRadius: radius.md,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: 14,
+                  fontFamily: 'DMSans_400Regular',
+                  fontSize: 16,
+                  color: colors.text,
+                  width: '48%',
+                }}
+              />
+              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.subtle, marginTop: 6 }}>
+                Si no sabes, déjalo en blanco — SOCIO lo estimará.
+              </Text>
+            </View>
+
+            {/* Horas de sueño */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                Horas de sueño promedio
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
+                {(['<5', '5-6', '6-7', '7-8', '8+'] as const).map((h) => (
+                  <TouchableOpacity
+                    key={h}
+                    onPress={() => setData((p) => ({ ...p, sleepHours: h } as any))}
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: spacing.md,
+                      borderRadius: radius.full,
+                      borderWidth: 1.5,
+                      borderColor: (data as any).sleepHours === h ? colors.calm : colors.border,
+                      backgroundColor: (data as any).sleepHours === h ? `${colors.calm}15` : colors.surface,
+                    }}
+                  >
+                    <Text style={{ fontFamily: (data as any).sleepHours === h ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: (data as any).sleepHours === h ? colors.calm : colors.muted }}>
+                      {h} hrs
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Vasos de agua/día */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                Vasos de agua que tomas al día
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
+                {(['<4', '4-6', '6-8', '8+'] as const).map((w) => (
+                  <TouchableOpacity
+                    key={w}
+                    onPress={() => setData((p) => ({ ...p, waterGlasses: w } as any))}
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: spacing.md,
+                      borderRadius: radius.full,
+                      borderWidth: 1.5,
+                      borderColor: (data as any).waterGlasses === w ? colors.calm : colors.border,
+                      backgroundColor: (data as any).waterGlasses === w ? `${colors.calm}15` : colors.surface,
+                    }}
+                  >
+                    <Text style={{ fontFamily: (data as any).waterGlasses === w ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: (data as any).waterGlasses === w ? colors.calm : colors.muted }}>
+                      💧 {w}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Actividad diaria fuera del gym */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                Tu día a día (fuera del entreno)
+              </Text>
+              <View style={{ gap: spacing.xs }}>
+                {([
+                  { v: 'sedentario', label: 'Sedentario — escritorio, poco movimiento' },
+                  { v: 'ligero',     label: 'Ligero — algo de caminata diaria' },
+                  { v: 'activo',     label: 'Activo — trabajo de pie / muchos pasos' },
+                  { v: 'muy_activo', label: 'Muy activo — trabajo físico' },
+                ] as const).map((a) => (
+                  <TouchableOpacity
+                    key={a.v}
+                    onPress={() => setData((p) => ({ ...p, dailyActivityLevel: a.v } as any))}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: spacing.md,
+                      borderRadius: radius.md,
+                      borderWidth: 1.5,
+                      borderColor: (data as any).dailyActivityLevel === a.v ? colors.primary : colors.border,
+                      backgroundColor: (data as any).dailyActivityLevel === a.v ? `${colors.primary}10` : colors.surface,
+                    }}
+                  >
+                    <Text style={{ fontFamily: (data as any).dailyActivityLevel === a.v ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: (data as any).dailyActivityLevel === a.v ? colors.primary : colors.text }}>
+                      {a.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Experiencia previa */}
+            <View>
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.text, marginBottom: spacing.sm }}>
+                ¿Cuánto llevas entrenando regularmente?
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
+                {([
+                  { v: 'nunca',     label: 'Nunca / volver de 0' },
+                  { v: '<6m',       label: '<6 meses' },
+                  { v: '6m-2y',     label: '6m - 2 años' },
+                  { v: '2-5y',      label: '2 - 5 años' },
+                  { v: '5+y',       label: '5+ años' },
+                ] as const).map((e) => (
+                  <TouchableOpacity
+                    key={e.v}
+                    onPress={() => setData((p) => ({ ...p, trainingExperience: e.v } as any))}
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: spacing.md,
+                      borderRadius: radius.full,
+                      borderWidth: 1.5,
+                      borderColor: (data as any).trainingExperience === e.v ? colors.ai : colors.border,
+                      backgroundColor: (data as any).trainingExperience === e.v ? `${colors.ai}12` : colors.surface,
+                    }}
+                  >
+                    <Text style={{ fontFamily: (data as any).trainingExperience === e.v ? 'DMSans_700Bold' : 'DMSans_400Regular', fontSize: 13, color: (data as any).trainingExperience === e.v ? colors.ai : colors.muted }}>
+                      {e.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
           </>
         );
 
